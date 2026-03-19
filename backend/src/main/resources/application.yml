@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: hotel-management-backend
+  datasource:
+    url: jdbc:mysql://192.168.15.100:3306/hotel_management?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: shice2022mysql
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: 192.168.15.100
+      port: 6379
+  rabbitmq:
+    host: 192.168.15.100
+    port: 5672
+    username: root
+    password: 123456
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+server:
+  port: 8080
+
+security:
+  jwt:
+    secret: replace-this-with-a-strong-256-bit-secret-key-1234567890
+    access-token-expire-seconds: 7200
+    refresh-token-expire-seconds: 604800
