@@ -55,7 +55,7 @@ public class OtaChannelController {
     }
 
     @PostMapping("/callback/{channelCode}")
-    public ApiResponse<Void> callback(@PathVariable String channelCode, @RequestBody String payload) {
+    public ApiResponse<Void> callback(@PathVariable("channelCode") String channelCode, @RequestBody String payload) {
         otaChannelService.handleCallback(channelCode, payload);
         return ApiResponse.success(null);
     }
@@ -72,3 +72,4 @@ public class OtaChannelController {
         return ApiResponse.success(otaChannelService.listCallbackLogs());
     }
 }
+

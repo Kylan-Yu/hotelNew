@@ -34,15 +34,16 @@ public class GroupController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('group:write')")
-    public ApiResponse<Void> update(@PathVariable Long id, @Valid @RequestBody GroupUpdateRequest request) {
+    public ApiResponse<Void> update(@PathVariable("id") Long id, @Valid @RequestBody GroupUpdateRequest request) {
         groupService.update(id, request);
         return ApiResponse.success(null);
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAuthority('group:write')")
-    public ApiResponse<Void> updateStatus(@PathVariable Long id, @Valid @RequestBody StatusUpdateRequest request) {
+    public ApiResponse<Void> updateStatus(@PathVariable("id") Long id, @Valid @RequestBody StatusUpdateRequest request) {
         groupService.updateStatus(id, request.getStatus());
         return ApiResponse.success(null);
     }
 }
+

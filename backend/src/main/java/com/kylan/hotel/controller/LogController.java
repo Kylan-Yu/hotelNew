@@ -42,7 +42,8 @@ public class LogController {
 
     @GetMapping("/options/groups")
     @PreAuthorize("hasAuthority('report:read')")
-    public ApiResponse<List<GroupVO>> groupOptions(@RequestParam(required = false, defaultValue = "true") Boolean preferCurrent) {
+    public ApiResponse<List<GroupVO>> groupOptions(
+            @RequestParam(value = "preferCurrent", required = false, defaultValue = "true") Boolean preferCurrent) {
         return ApiResponse.success(logService.groupOptions(preferCurrent));
     }
 
@@ -54,16 +55,18 @@ public class LogController {
 
     @GetMapping("/options/brands")
     @PreAuthorize("hasAuthority('report:read')")
-    public ApiResponse<List<BrandVO>> brandOptions(@RequestParam(required = false) Long groupId,
-                                                   @RequestParam(required = false, defaultValue = "true") Boolean preferCurrent) {
+    public ApiResponse<List<BrandVO>> brandOptions(
+            @RequestParam(value = "groupId", required = false) Long groupId,
+            @RequestParam(value = "preferCurrent", required = false, defaultValue = "true") Boolean preferCurrent) {
         return ApiResponse.success(logService.brandOptions(groupId, preferCurrent));
     }
 
     @GetMapping("/options/properties")
     @PreAuthorize("hasAuthority('report:read')")
-    public ApiResponse<List<PropertyVO>> propertyOptions(@RequestParam(required = false) Long groupId,
-                                                         @RequestParam(required = false) Long brandId,
-                                                         @RequestParam(required = false, defaultValue = "true") Boolean preferCurrent) {
+    public ApiResponse<List<PropertyVO>> propertyOptions(
+            @RequestParam(value = "groupId", required = false) Long groupId,
+            @RequestParam(value = "brandId", required = false) Long brandId,
+            @RequestParam(value = "preferCurrent", required = false, defaultValue = "true") Boolean preferCurrent) {
         return ApiResponse.success(logService.propertyOptions(groupId, brandId, preferCurrent));
     }
 }

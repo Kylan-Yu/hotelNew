@@ -1,8 +1,6 @@
-﻿import { Alert, App, Button, Collapse, Form, Input, Modal, Select, Space, Switch, Table, Typography } from 'antd'
-import { useEffect, useMemo, useState } from 'react'
+﻿import { Alert, App, Button, Form, Input, Modal, Select, Space, Switch, Table } from 'antd'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BrandItem, fetchBrands } from '../api/brandApi'
-import { GroupItem, fetchGroups } from '../api/groupApi'
 import {
   PropertyCreatePayload,
   PropertyItem,
@@ -14,36 +12,23 @@ import {
 
 export function PropertyListPage() {
   const [data, setData] = useState<PropertyItem[]>([])
-  const [groups, setGroups] = useState<GroupItem[]>([])
-  const [brands, setBrands] = useState<BrandItem[]>([])
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<PropertyItem | null>(null)
-  const [selectedGroupId, setSelectedGroupId] = useState<number | undefined>()
   const [form] = Form.useForm<PropertyCreatePayload>()
   const navigate = useNavigate()
   const { message } = App.useApp()
 
   const loadData = async () => {
-    const [propertyList, groupList, brandList] = await Promise.all([fetchProperties(), fetchGroups(), fetchBrands()])
+    const propertyList = await fetchProperties()
     setData(propertyList || [])
-    setGroups(groupList || [])
-    setBrands(brandList || [])
   }
 
   useEffect(() => {
     loadData()
   }, [])
 
-  const filteredBrands = useMemo(() => {
-    if (!selectedGroupId) {
-      return brands
-    }
-    return brands.filter((item) => item.groupId === selectedGroupId)
-  }, [brands, selectedGroupId])
-
   const handleAdd = () => {
     setEditing(null)
-    setSelectedGroupId(undefined)
     form.resetFields()
     form.setFieldValue('businessMode', 'HOMESTAY')
     setOpen(true)
@@ -51,10 +36,7 @@ export function PropertyListPage() {
 
   const handleEdit = (row: PropertyItem) => {
     setEditing(row)
-    setSelectedGroupId(row.groupId)
     form.setFieldsValue({
-      groupId: row.groupId,
-      brandId: row.brandId,
       propertyCode: row.propertyCode,
       propertyName: row.propertyName,
       businessMode: row.businessMode,
@@ -68,8 +50,6 @@ export function PropertyListPage() {
   const handleSave = async () => {
     const values = await form.validateFields()
     const payload = {
-      groupId: values.groupId || undefined,
-      brandId: values.brandId || undefined,
       propertyCode: values.propertyCode,
       propertyName: values.propertyName,
       businessMode: values.businessMode,
@@ -103,7 +83,7 @@ export function PropertyListPage() {
         type="info"
         showIcon
         style={{ marginBottom: 12 }}
-        message="新增民宿不再要求集团/品牌，系统按独立民宿建档；如需组织化管理，可在“高级组织信息（选填）”中补充。"
+        message="民宿多店模式：一个运营者可直接管理多家民宿，无需集团/品牌等组织层级。"
       />
       <Space style={{ marginBottom: 16 }}>
         <Button type="primary" onClick={handleAdd}>
@@ -114,17 +94,8 @@ export function PropertyListPage() {
         rowKey="id"
         dataSource={data}
         columns={[
-          { title: '民宿编码', dataIndex: 'propertyCode', width: 140 },
-          { title: '民宿名称', dataIndex: 'propertyName', width: 220 },
-          {
-            title: '组织归属',
-            width: 240,
-            render: (_, row) => (
-              <Typography.Text>
-                {row.groupName || '独立民宿'} / {row.brandName || '无品牌'}
-              </Typography.Text>
-            ),
-          },
+          { title: '民宿编码', dataIndex: 'propertyCode', width: 150 },
+          { title: '民宿名称', dataIndex: 'propertyName', width: 240 },
           {
             title: '经营模式',
             dataIndex: 'businessMode',
@@ -169,7 +140,7 @@ export function PropertyListPage() {
           <Form.Item name="propertyName" label="民宿名称" rules={[{ required: true, message: '请输入民宿名称' }]}>
             <Input placeholder="例如: 静栖里·外滩店" />
           </Form.Item>
-          <Form.Item name="businessMode" label="经营模式" rules={[{ required: true }]}> 
+          <Form.Item name="businessMode" label="经营模式" rules={[{ required: true }]}>
             <Select options={[{ label: '民宿', value: 'HOMESTAY' }, { label: '酒店', value: 'HOTEL' }]} />
           </Form.Item>
           <Form.Item name="contactPhone" label="联系电话">
@@ -181,40 +152,6 @@ export function PropertyListPage() {
           <Form.Item name="address" label="地址">
             <Input />
           </Form.Item>
-
-          <Collapse
-            ghost
-            items={[
-              {
-                key: 'org',
-                label: '高级组织信息（选填）',
-                children: (
-                  <>
-                    <Form.Item name="groupId" label="所属集团（可选）">
-                      <Select
-                        allowClear
-                        placeholder="不填则按独立民宿管理"
-                        options={groups.map((g) => ({ label: `${g.groupCode} - ${g.groupName}`, value: g.id }))}
-                        onChange={(value) => {
-                          setSelectedGroupId(value)
-                          if (!value) {
-                            form.setFieldValue('brandId', undefined)
-                          }
-                        }}
-                      />
-                    </Form.Item>
-                    <Form.Item name="brandId" label="所属品牌（可选）">
-                      <Select
-                        allowClear
-                        placeholder="可不填"
-                        options={filteredBrands.map((b) => ({ label: `${b.brandCode} - ${b.brandName}`, value: b.id }))}
-                      />
-                    </Form.Item>
-                  </>
-                ),
-              },
-            ]}
-          />
         </Form>
       </Modal>
     </div>

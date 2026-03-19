@@ -34,15 +34,16 @@ public class PropertyController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('property:write')")
-    public ApiResponse<Void> update(@PathVariable Long id, @Valid @RequestBody PropertyUpdateRequest request) {
+    public ApiResponse<Void> update(@PathVariable("id") Long id, @Valid @RequestBody PropertyUpdateRequest request) {
         propertyService.update(id, request);
         return ApiResponse.success(null);
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAuthority('property:write')")
-    public ApiResponse<Void> updateStatus(@PathVariable Long id, @Valid @RequestBody StatusUpdateRequest request) {
+    public ApiResponse<Void> updateStatus(@PathVariable("id") Long id, @Valid @RequestBody StatusUpdateRequest request) {
         propertyService.updateStatus(id, request.getStatus());
         return ApiResponse.success(null);
     }
 }
+

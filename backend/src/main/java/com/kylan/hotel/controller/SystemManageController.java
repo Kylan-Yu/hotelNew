@@ -50,7 +50,7 @@ public class SystemManageController {
 
     @PutMapping("/users/{id}")
     @PreAuthorize("hasAuthority('sys:user:write') or hasAuthority('*')")
-    public ApiResponse<Void> updateUser(@PathVariable Long id, @Valid @RequestBody SystemUserUpdateRequest request) {
+    public ApiResponse<Void> updateUser(@PathVariable("id") Long id, @Valid @RequestBody SystemUserUpdateRequest request) {
         systemManageService.updateUser(id, request);
         return ApiResponse.success(null);
     }
@@ -69,7 +69,7 @@ public class SystemManageController {
 
     @PutMapping("/roles/{id}")
     @PreAuthorize("hasAuthority('sys:role:write') or hasAuthority('*')")
-    public ApiResponse<Void> updateRole(@PathVariable Long id, @Valid @RequestBody SystemRoleUpdateRequest request) {
+    public ApiResponse<Void> updateRole(@PathVariable("id") Long id, @Valid @RequestBody SystemRoleUpdateRequest request) {
         systemManageService.updateRole(id, request);
         return ApiResponse.success(null);
     }
@@ -100,7 +100,7 @@ public class SystemManageController {
 
     @PutMapping("/dicts/{dictCode}")
     @PreAuthorize("hasAuthority('sys:dict:write') or hasAuthority('*')")
-    public ApiResponse<Void> updateDict(@PathVariable String dictCode, @Valid @RequestBody SystemDictUpdateRequest request) {
+    public ApiResponse<Void> updateDict(@PathVariable("dictCode") String dictCode, @Valid @RequestBody SystemDictUpdateRequest request) {
         systemManageService.updateDict(dictCode, request);
         return ApiResponse.success(null);
     }
@@ -119,8 +119,9 @@ public class SystemManageController {
 
     @PutMapping("/params/{paramKey}")
     @PreAuthorize("hasAuthority('sys:param:write') or hasAuthority('*')")
-    public ApiResponse<Void> updateParam(@PathVariable String paramKey, @Valid @RequestBody SystemParamUpdateRequest request) {
+    public ApiResponse<Void> updateParam(@PathVariable("paramKey") String paramKey, @Valid @RequestBody SystemParamUpdateRequest request) {
         systemManageService.updateParam(paramKey, request);
         return ApiResponse.success(null);
     }
 }
+

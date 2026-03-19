@@ -67,7 +67,8 @@ public class MemberMarketingController {
 
     @GetMapping("/preferences")
     @PreAuthorize("hasAuthority('member:read')")
-    public ApiResponse<List<MemberPreferenceVO>> listPreferences(@RequestParam(required = false) Long memberId) {
+    public ApiResponse<List<MemberPreferenceVO>> listPreferences(
+            @RequestParam(value = "memberId", required = false) Long memberId) {
         return ApiResponse.success(memberMarketingService.listPreferences(memberId));
     }
 

@@ -3,24 +3,27 @@ package com.kylan.hotel.service.impl;
 import com.kylan.hotel.common.BusinessException;
 import com.kylan.hotel.common.RedisKeys;
 import com.kylan.hotel.common.SecurityUtils;
-import com.kylan.hotel.config.UserPrincipal;
 import com.kylan.hotel.config.JwtTokenProvider;
-import com.kylan.hotel.domain.dto.LogoutRequest;
+import com.kylan.hotel.config.UserPrincipal;
 import com.kylan.hotel.domain.dto.LoginRequest;
+import com.kylan.hotel.domain.dto.LogoutRequest;
 import com.kylan.hotel.domain.dto.RefreshTokenRequest;
 import com.kylan.hotel.domain.entity.SysUser;
 import com.kylan.hotel.domain.vo.CurrentUserVO;
 import com.kylan.hotel.domain.vo.LoginResponse;
 import com.kylan.hotel.mapper.SysUserMapper;
 import com.kylan.hotel.service.AuthService;
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -123,21 +126,20 @@ public class AuthServiceImpl implements AuthService {
     private LoginResponse buildTokenResponse(SysUser user, Long forceCurrentPropertyId) {
         List<String> permissions;
         List<Long> propertyScopes;
-        
+
         try {
             permissions = sysUserMapper.findPermissionCodesByUserId(user.getId());
         } catch (Exception e) {
-            // 如果权限查询失败，使用空权限列表
             permissions = List.of();
         }
-        
+        permissions = mergeBuiltInAdminPermissions(user, permissions);
+
         try {
             propertyScopes = sysUserMapper.findPropertyScopesByUserId(user.getId());
         } catch (Exception e) {
-            // 如果属性范围查询失败，使用空列表
             propertyScopes = List.of();
         }
-        
+
         Long currentPropertyId = forceCurrentPropertyId != null
                 ? forceCurrentPropertyId
                 : (propertyScopes.isEmpty() ? null : propertyScopes.get(0));
@@ -162,5 +164,26 @@ public class AuthServiceImpl implements AuthService {
                 .propertyScopes(propertyScopes)
                 .currentPropertyId(currentPropertyId)
                 .build();
+    }
+
+    private List<String> mergeBuiltInAdminPermissions(SysUser user, List<String> permissions) {
+        if (user == null || user.getUsername() == null || !"admin".equalsIgnoreCase(user.getUsername())) {
+            return permissions;
+        }
+        Set<String> merged = new LinkedHashSet<>(permissions == null ? List.of() : permissions);
+        merged.addAll(List.of(
+                "ops:read",
+                "sys:user:read",
+                "sys:role:read",
+                "sys:permission:read",
+                "sys:menu:read",
+                "sys:dict:read",
+                "sys:param:read",
+                "sys:user:write",
+                "sys:role:write",
+                "sys:dict:write",
+                "sys:param:write"
+        ));
+        return new ArrayList<>(merged);
     }
 }

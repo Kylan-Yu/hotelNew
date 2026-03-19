@@ -69,7 +69,9 @@ public class PropertyServiceImpl implements PropertyService {
         if (existing == null) {
             throw new BusinessException("property not found");
         }
-        ResolvedOrg resolvedOrg = resolveGroupBrand(request.getGroupId(), request.getBrandId());
+        ResolvedOrg resolvedOrg = (request.getGroupId() == null && request.getBrandId() == null)
+                ? new ResolvedOrg(existing.getGroupId(), existing.getBrandId())
+                : resolveGroupBrand(request.getGroupId(), request.getBrandId());
 
         existing.setGroupId(resolvedOrg.groupId);
         existing.setBrandId(resolvedOrg.brandId);
@@ -95,7 +97,7 @@ public class PropertyServiceImpl implements PropertyService {
 
     private ResolvedOrg resolveGroupBrand(Long groupId, Long brandId) {
         if (groupId == null && brandId == null) {
-            return new ResolvedOrg(null, null);
+            return resolveDefaultOrg();
         }
 
         if (brandId != null) {
@@ -119,6 +121,31 @@ public class PropertyServiceImpl implements PropertyService {
             throw new BusinessException("group not found");
         }
         return new ResolvedOrg(groupId, null);
+    }
+
+    /**
+     * Compatibility fallback:
+     * Older databases may still enforce non-null group_id/brand_id on hotel_property.
+     * To keep homestay creation UX simple, we inherit org fields from current property
+     * or the earliest property with org fields.
+     */
+    private ResolvedOrg resolveDefaultOrg() {
+        try {
+            Long currentPropertyId = SecurityUtils.currentPropertyId();
+            if (currentPropertyId != null) {
+                HotelProperty currentProperty = hotelPropertyMapper.findById(currentPropertyId);
+                if (currentProperty != null && currentProperty.getGroupId() != null) {
+                    return new ResolvedOrg(currentProperty.getGroupId(), currentProperty.getBrandId());
+                }
+            }
+        } catch (Exception ignore) {
+        }
+
+        HotelProperty fallback = hotelPropertyMapper.findFirstWithOrg();
+        if (fallback != null && fallback.getGroupId() != null) {
+            return new ResolvedOrg(fallback.getGroupId(), fallback.getBrandId());
+        }
+        return new ResolvedOrg(null, null);
     }
 
     private String currentOperator() {

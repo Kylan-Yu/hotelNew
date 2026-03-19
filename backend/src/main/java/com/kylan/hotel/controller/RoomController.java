@@ -35,21 +35,22 @@ public class RoomController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('room:write')")
-    public ApiResponse<Void> update(@PathVariable Long id, @Valid @RequestBody RoomUpdateRequest request) {
+    public ApiResponse<Void> update(@PathVariable("id") Long id, @Valid @RequestBody RoomUpdateRequest request) {
         roomService.update(id, request);
         return ApiResponse.success(null);
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAuthority('room:write')")
-    public ApiResponse<Void> updateStatus(@PathVariable Long id, @Valid @RequestBody RoomStatusUpdateRequest request) {
+    public ApiResponse<Void> updateStatus(@PathVariable("id") Long id, @Valid @RequestBody RoomStatusUpdateRequest request) {
         roomService.updateStatus(id, request);
         return ApiResponse.success(null);
     }
 
     @GetMapping("/{id}/status-logs")
     @PreAuthorize("hasAuthority('room:read')")
-    public ApiResponse<List<RoomStatusLogVO>> listStatusLogs(@PathVariable Long id) {
+    public ApiResponse<List<RoomStatusLogVO>> listStatusLogs(@PathVariable("id") Long id) {
         return ApiResponse.success(roomService.listStatusLogs(id));
     }
 }
+

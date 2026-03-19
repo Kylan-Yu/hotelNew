@@ -57,6 +57,7 @@ const PAYMENT_METHOD: Record<string, string> = {
 
 const PAYMENT_STATUS: Record<string, string> = {
   SUCCESS: '成功',
+  PAID: '已支付',
   PENDING: '处理中',
   FAILED: '失败',
 }

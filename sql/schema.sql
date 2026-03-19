@@ -409,6 +409,30 @@ CREATE TABLE IF NOT EXISTS hotel_reservation (
   KEY idx_hotel_reservation_property_date (property_id, check_in_date)
 ) COMMENT='预订表 / Reservation Table';
 
+CREATE TABLE IF NOT EXISTS hotel_order (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '订单ID / Order ID',
+  order_no VARCHAR(64) NOT NULL COMMENT '订单号 / Order No',
+  property_id BIGINT NOT NULL COMMENT '门店ID / Property ID',
+  room_type_id BIGINT NOT NULL COMMENT '房型ID / Room Type ID',
+  source_channel VARCHAR(32) NOT NULL DEFAULT 'DIRECT' COMMENT '来源渠道 / Source Channel',
+  guest_name VARCHAR(64) NOT NULL COMMENT '住客姓名 / Guest Name',
+  guest_mobile VARCHAR(32) NOT NULL COMMENT '住客手机号 / Guest Mobile',
+  check_in_date DATE NOT NULL COMMENT '入住日期 / Check-in Date',
+  check_out_date DATE NOT NULL COMMENT '离店日期 / Check-out Date',
+  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '订单金额 / Total Amount',
+  order_status VARCHAR(32) NOT NULL COMMENT '订单状态 / Order Status',
+  channel_order_no VARCHAR(128) DEFAULT NULL COMMENT '渠道订单号 / Channel Order No',
+  created_by VARCHAR(64) DEFAULT NULL COMMENT '创建人 / Created By',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间 / Created At',
+  updated_by VARCHAR(64) DEFAULT NULL COMMENT '更新人 / Updated By',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间 / Updated At',
+  deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除 / Logical Deleted',
+  UNIQUE KEY uk_hotel_order_order_no (order_no),
+  KEY idx_hotel_order_property_id (property_id),
+  KEY idx_hotel_order_room_type_id (room_type_id),
+  KEY idx_hotel_order_status (order_status)
+) COMMENT='订单主表 / Hotel Order Table';
+
 CREATE TABLE IF NOT EXISTS hotel_stay_record (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '入住记录ID / Stay Record ID',
   stay_no VARCHAR(64) NOT NULL COMMENT '入住单号 / Stay No',
@@ -736,6 +760,10 @@ ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
 
 INSERT INTO hotel_reservation (reservation_no, property_id, room_type_id, channel_code, contact_name, contact_mobile, guest_count, check_in_date, check_out_date, reservation_status, estimated_amount, remark, created_by, updated_by, deleted)
 VALUES ('RSV_INIT_001', 1, 1, 'DIRECT', '测试住客', '13900000001', 2, CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), 'CONFIRMED', 388.00, '初始化预订', 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+INSERT INTO hotel_order (order_no, property_id, room_type_id, source_channel, guest_name, guest_mobile, check_in_date, check_out_date, total_amount, order_status, channel_order_no, created_by, updated_by, deleted)
+VALUES ('ORD_INIT_001', 1, 1, 'DIRECT', '测试住客', '13900000001', CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), 388.00, 'CONFIRMED', NULL, 'system', 'system', 0)
 ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
 
 -- =========================

@@ -35,7 +35,7 @@ public class OrderStayController {
 
     @PostMapping("/reservations/{id}/generate-order")
     @PreAuthorize("hasAuthority('order:write')")
-    public ApiResponse<Long> createOrderByReservation(@PathVariable Long id) {
+    public ApiResponse<Long> createOrderByReservation(@PathVariable("id") Long id) {
         return ApiResponse.success(orderStayService.createOrderByReservation(id));
     }
 
@@ -53,13 +53,13 @@ public class OrderStayController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('order:read')")
-    public ApiResponse<OrderDetailVO> detail(@PathVariable Long id) {
+    public ApiResponse<OrderDetailVO> detail(@PathVariable("id") Long id) {
         return ApiResponse.success(orderStayService.orderDetail(id));
     }
 
     @GetMapping("/{id}/timeline")
     @PreAuthorize("hasAuthority('order:read')")
-    public ApiResponse<List<RoomStatusTimelineVO>> timeline(@PathVariable Long id) {
+    public ApiResponse<List<RoomStatusTimelineVO>> timeline(@PathVariable("id") Long id) {
         return ApiResponse.success(orderStayService.roomStatusTimeline(id));
     }
 
@@ -138,3 +138,4 @@ public class OrderStayController {
         return ResponseEntity.ok().headers(headers).body(bytes);
     }
 }
+

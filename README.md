@@ -152,9 +152,9 @@ This project has been refocused from a hotel-group admin panel to a homestay mul
 
 ## 11. 本轮功能增强 | Latest Enhancement
 ### 11.1 民宿管理去集团强依赖
-- 新增/编辑民宿时，`groupId`、`brandId` 均为可选，支持独立民宿直接建档。
-- 后端 DTO 与 Service 校验已同步放宽，若只传 `brandId` 将自动回填所属 `groupId`。
-- SQL `hotel_property.group_id`、`hotel_property.brand_id` 已调整为可空字段。
+- 前端“新增/编辑民宿”已移除集团/品牌输入项，运营者可直接管理多家民宿。
+- 后端仍保留组织字段兼容能力：当请求不传组织信息时，按当前门店上下文自动继承（用于兼容旧库约束）。
+- SQL `hotel_property.group_id`、`hotel_property.brand_id` 设计为可空字段；旧库可通过脚本 `ALTER TABLE ... MODIFY COLUMN ... NULL` 迁移。
 
 ### 11.2 菜单页面功能补齐（中文化）
 - 订单中心：预订、入住、在住、退房、详情入口与时间线均已中文化并可操作。
@@ -174,8 +174,8 @@ This project has been refocused from a hotel-group admin panel to a homestay mul
   - 前端登录接口增加“包裹数据/直接数据”双格式兼容，修复 `accessToken` 读取异常。
   - 登录页文案乱码已修复为中英文正常显示。
 - 民宿管理增强：
-  - 新增民宿默认不要求集团/品牌，组织字段调整为“高级组织信息（选填）”。
-  - 保留集团/品牌扩展能力，但不影响独立民宿建档。
+  - 新增民宿默认不要求集团/品牌，表单已改为纯民宿维度信息。
+  - 保留集团/品牌扩展能力作为后端兼容字段，但不再作为默认录入项。
 - 订单中心中文化增强：
   - 订单、预订、入住、支付、证件等状态码统一采用前端字典映射，不再直接显示英文状态码。
   - 今日入住/今日退房工作台列表同步中文状态显示。
@@ -192,8 +192,17 @@ Latest incremental updates:
 - Order center and related pages now render status codes via Chinese dictionaries instead of raw English codes.
 - Pricing/channel/member/finance/operations pages now apply unified Chinese business-code mapping.
 - System management now supports create/update for users, roles, dictionaries, and parameters (backend + mock APIs).
+- Startup compatibility initializer now auto-ensures critical legacy schema gaps (`hotel_order`, audit/operation log org-dimension columns).
 
-## 12. 启动说明 | Quick Start
+## 12.1 兼容初始化说明 | Compatibility Bootstrap
+后端启动时会自动执行最小兼容建表/补列（不覆盖业务数据）：
+- `hotel_order` 缺表自动创建
+- `audit_log_record.group_id/brand_id/property_id` 缺列自动补齐
+- `operation_log_record.group_id/brand_id/property_id` 缺列自动补齐
+
+This startup bootstrap only fills missing critical structures for legacy databases and keeps existing data unchanged.
+
+## 13. 启动说明 | Quick Start
 ### Backend
 ```bash
 cd backend
@@ -210,3 +219,11 @@ npm run dev
 默认测试账号（seed data）：
 - username: `admin`
 - password: `Admin@123`
+
+## 14. 常见问题 | Troubleshooting
+- 前端报 `ERR_CONNECTION_REFUSED`（如 `POST http://localhost:8080/api/properties`）：
+  - 原因通常是后端未启动或进程被中断（例如终端 `Ctrl+C`）。
+  - 处理：先确认 `8080` 端口监听，再刷新前端页面重试。
+- 旧库执行新功能时报 “Unknown column / Table doesn't exist”：
+  - 先运行 `sql/schema.sql` 完整脚本；
+  - 或直接重启后端，利用兼容初始化自动补齐关键缺失结构。

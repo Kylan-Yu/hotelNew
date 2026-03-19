@@ -47,6 +47,18 @@ public interface HotelPropertyMapper {
             """)
     HotelProperty findById(Long id);
 
+    @Select("""
+            SELECT id, group_id AS groupId, brand_id AS brandId, property_code AS propertyCode, property_name AS propertyName,
+                   business_mode AS businessMode, contact_phone AS contactPhone, province, city, district, address, status,
+                   created_by AS createdBy, created_at AS createdAt, updated_by AS updatedBy, updated_at AS updatedAt, deleted
+            FROM hotel_property
+            WHERE deleted = 0
+              AND group_id IS NOT NULL
+            ORDER BY id ASC
+            LIMIT 1
+            """)
+    HotelProperty findFirstWithOrg();
+
     @Select("SELECT COUNT(1) FROM hotel_property WHERE property_code = #{propertyCode} AND deleted = 0")
     int countByPropertyCode(String propertyCode);
 

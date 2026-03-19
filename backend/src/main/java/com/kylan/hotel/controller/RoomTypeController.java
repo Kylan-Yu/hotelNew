@@ -34,15 +34,16 @@ public class RoomTypeController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('roomType:write')")
-    public ApiResponse<Void> update(@PathVariable Long id, @Valid @RequestBody RoomTypeUpdateRequest request) {
+    public ApiResponse<Void> update(@PathVariable("id") Long id, @Valid @RequestBody RoomTypeUpdateRequest request) {
         roomTypeService.update(id, request);
         return ApiResponse.success(null);
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAuthority('roomType:write')")
-    public ApiResponse<Void> updateStatus(@PathVariable Long id, @Valid @RequestBody StatusUpdateRequest request) {
+    public ApiResponse<Void> updateStatus(@PathVariable("id") Long id, @Valid @RequestBody StatusUpdateRequest request) {
         roomTypeService.updateStatus(id, request.getStatus());
         return ApiResponse.success(null);
     }
 }
+

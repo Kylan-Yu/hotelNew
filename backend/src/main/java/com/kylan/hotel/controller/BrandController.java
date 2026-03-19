@@ -34,15 +34,16 @@ public class BrandController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('brand:write')")
-    public ApiResponse<Void> update(@PathVariable Long id, @Valid @RequestBody BrandUpdateRequest request) {
+    public ApiResponse<Void> update(@PathVariable("id") Long id, @Valid @RequestBody BrandUpdateRequest request) {
         brandService.update(id, request);
         return ApiResponse.success(null);
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAuthority('brand:write')")
-    public ApiResponse<Void> updateStatus(@PathVariable Long id, @Valid @RequestBody StatusUpdateRequest request) {
+    public ApiResponse<Void> updateStatus(@PathVariable("id") Long id, @Valid @RequestBody StatusUpdateRequest request) {
         brandService.updateStatus(id, request.getStatus());
         return ApiResponse.success(null);
     }
 }
+
