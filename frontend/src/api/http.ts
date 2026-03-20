@@ -1,7 +1,31 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 
+export function normalizeApiBaseUrl(rawUrl?: string | null): string {
+  const value = (rawUrl || '').trim()
+  if (!value) {
+    return 'http://localhost:8080/api'
+  }
+  return value.replace(/\/+$/, '')
+}
+
+export function buildApiUrl(path: string): string {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  return `${API_BASE_URL}${normalizedPath}`
+}
+
+export const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL)
+
 export const http = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+})
+
+const refreshHttp = axios.create({
+  baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -38,8 +62,8 @@ http.interceptors.response.use(
     }
 
     if (!refreshingPromise) {
-      refreshingPromise = axios
-        .post('http://localhost:8080/api/auth/refresh', { refreshToken })
+      refreshingPromise = refreshHttp
+        .post('/auth/refresh', { refreshToken })
         .then((res) => {
           const data = res.data.data
           localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken)

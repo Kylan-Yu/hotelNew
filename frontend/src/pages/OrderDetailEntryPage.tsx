@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { dictText } from '../constants/businessDict'
 import { fetchOrders } from '../api/orderApi'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 export function OrderDetailEntryPage() {
   const [data, setData] = useState<any[]>([])
@@ -46,6 +47,7 @@ export function OrderDetailEntryPage() {
       <Table
         rowKey="id"
         dataSource={filteredData}
+        pagination={DEFAULT_TABLE_PAGINATION}
         columns={[
           { title: '订单号', dataIndex: 'orderNo', width: 170 },
           { title: '民宿', dataIndex: 'propertyName', width: 170 },

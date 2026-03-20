@@ -1,13 +1,8 @@
 {
-  "name": "hotel-mock-server",
-  "version": "1.0.0",
-  "description": "Mock server for hotel management system",
-  "main": "mock-server.js",
+  "name": "hotel-management-system",
+  "private": true,
+  "description": "Workspace metadata. Start backend and frontend in their own directories.",
   "scripts": {
-    "start": "node mock-server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "start": "echo \"No mock server. Start backend and frontend separately.\""
   }
 }

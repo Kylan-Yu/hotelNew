@@ -8,9 +8,11 @@ import com.kylan.hotel.config.UserPrincipal;
 import com.kylan.hotel.domain.dto.LoginRequest;
 import com.kylan.hotel.domain.dto.LogoutRequest;
 import com.kylan.hotel.domain.dto.RefreshTokenRequest;
+import com.kylan.hotel.domain.entity.HotelProperty;
 import com.kylan.hotel.domain.entity.SysUser;
 import com.kylan.hotel.domain.vo.CurrentUserVO;
 import com.kylan.hotel.domain.vo.LoginResponse;
+import com.kylan.hotel.mapper.HotelPropertyMapper;
 import com.kylan.hotel.mapper.SysUserMapper;
 import com.kylan.hotel.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -20,10 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -35,6 +34,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final StringRedisTemplate stringRedisTemplate;
+    private final HotelPropertyMapper hotelPropertyMapper;
 
     @Override
     public LoginResponse login(LoginRequest request) {
@@ -109,8 +109,15 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse switchProperty(Long propertyId) {
         UserPrincipal principal = SecurityUtils.currentPrincipal();
         List<Long> scopes = principal.getPropertyScopes() == null ? List.of() : principal.getPropertyScopes();
-        if (!principal.getPermissions().contains("scope:all") && !scopes.contains(propertyId)) {
-            throw new BusinessException("property scope denied");
+        if (!principal.getPermissions().contains("scope:all")) {
+            if (scopes.isEmpty()) {
+                HotelProperty target = hotelPropertyMapper.findById(propertyId);
+                if (target == null || target.getStatus() == null || target.getStatus() != 1) {
+                    throw new BusinessException("property scope denied");
+                }
+            } else if (!scopes.contains(propertyId)) {
+                throw new BusinessException("property scope denied");
+            }
         }
         SysUser user = sysUserMapper.findById(principal.getUserId());
         if (user == null || user.getStatus() == null || user.getStatus() != 1) {
@@ -132,12 +139,17 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception e) {
             permissions = List.of();
         }
-        permissions = mergeBuiltInAdminPermissions(user, permissions);
 
         try {
             propertyScopes = sysUserMapper.findPropertyScopesByUserId(user.getId());
         } catch (Exception e) {
             propertyScopes = List.of();
+        }
+        if (propertyScopes == null || propertyScopes.isEmpty()) {
+            propertyScopes = hotelPropertyMapper.findAll().stream()
+                    .filter(item -> item.getStatus() != null && item.getStatus() == 1)
+                    .map(item -> item.getId())
+                    .toList();
         }
 
         Long currentPropertyId = forceCurrentPropertyId != null
@@ -164,26 +176,5 @@ public class AuthServiceImpl implements AuthService {
                 .propertyScopes(propertyScopes)
                 .currentPropertyId(currentPropertyId)
                 .build();
-    }
-
-    private List<String> mergeBuiltInAdminPermissions(SysUser user, List<String> permissions) {
-        if (user == null || user.getUsername() == null || !"admin".equalsIgnoreCase(user.getUsername())) {
-            return permissions;
-        }
-        Set<String> merged = new LinkedHashSet<>(permissions == null ? List.of() : permissions);
-        merged.addAll(List.of(
-                "ops:read",
-                "sys:user:read",
-                "sys:role:read",
-                "sys:permission:read",
-                "sys:menu:read",
-                "sys:dict:read",
-                "sys:param:read",
-                "sys:user:write",
-                "sys:role:write",
-                "sys:dict:write",
-                "sys:param:write"
-        ));
-        return new ArrayList<>(merged);
     }
 }

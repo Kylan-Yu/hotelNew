@@ -1,13 +1,15 @@
-﻿import { Card, Col, Row, Statistic, Table, Space } from 'antd'
+﻿import { Card, Col, Row, Space, Statistic, Table } from 'antd'
 import { useEffect, useState } from 'react'
-import { dailyReportExportUrl } from '../api/financeApi'
+import { useTranslation } from 'react-i18next'
+import { dailyReportExportUrl, fetchDailyReports, fetchDashboard, fetchPropertyStats, propertyStatsExportUrl } from '../api/financeApi'
 import { PermissionButton } from '../components/PermissionButton'
-import { fetchDashboard, fetchDailyReports, fetchPropertyStats } from '../api/financeApi'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 export function DashboardPage() {
   const [dashboard, setDashboard] = useState<any>({})
   const [dailyReports, setDailyReports] = useState<any[]>([])
   const [propertyStats, setPropertyStats] = useState<any[]>([])
+  const { t, i18n } = useTranslation()
 
   const download = async (url: string, filename: string) => {
     const token = localStorage.getItem('hms_access_token')
@@ -31,34 +33,60 @@ export function DashboardPage() {
     load()
   }, [])
 
+  const dailyFilename = i18n.language === 'zh-CN' ? 'daily-report.xlsx' : 'daily-report.xlsx'
+  const propertyFilename = i18n.language === 'zh-CN' ? 'property-stats.xlsx' : 'property-stats.xlsx'
+
   return (
     <div>
       <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={6}><Card><Statistic title="今日订单" value={dashboard.todayOrderCount || 0} /></Card></Col>
-        <Col span={6}><Card><Statistic title="今日净收入" value={dashboard.todayRevenue || 0} precision={2} /></Card></Col>
-        <Col span={6}><Card><Statistic title="在住间数" value={dashboard.inHouseCount || 0} /></Card></Col>
-        <Col span={6}><Card><Statistic title="库存预警门店" value={dashboard.warningInventoryCount || 0} /></Card></Col>
+        <Col span={6}><Card><Statistic title={t('dashboard.metricTodayOrders')} value={dashboard.todayOrderCount || 0} /></Card></Col>
+        <Col span={6}><Card><Statistic title={t('dashboard.metricTodayRevenue')} value={dashboard.todayRevenue || 0} precision={2} /></Card></Col>
+        <Col span={6}><Card><Statistic title={t('dashboard.metricInHouse')} value={dashboard.inHouseCount || 0} /></Card></Col>
+        <Col span={6}><Card><Statistic title={t('dashboard.metricWarnings')} value={dashboard.warningInventoryCount || 0} /></Card></Col>
       </Row>
 
-      <Card title="每日经营报表" style={{ marginBottom: 16 }} extra={<Space><PermissionButton permission="report:export" onClick={() => download(dailyReportExportUrl(), 'daily-report.xlsx')}>导出日报</PermissionButton></Space>}>
-        <Table rowKey="propertyId" dataSource={dailyReports} pagination={false}
+      <Card
+        title={t('dashboard.dailyReportTitle')}
+        style={{ marginBottom: 16 }}
+        extra={(
+          <Space>
+            <PermissionButton permission="report:export" onClick={() => download(dailyReportExportUrl(), dailyFilename)}>
+              {t('dashboard.dailyReportExport')}
+            </PermissionButton>
+          </Space>
+        )}
+      >
+        <Table
+          rowKey="propertyId"
+          dataSource={dailyReports}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
-            { title: '门店', dataIndex: 'propertyName' },
-            { title: '订单数', dataIndex: 'orderCount' },
-            { title: '收款', dataIndex: 'paymentAmount' },
-            { title: '退款', dataIndex: 'refundAmount' },
-            { title: '净收入', dataIndex: 'netRevenue' },
+            { title: t('dashboard.colProperty'), dataIndex: 'propertyName' },
+            { title: t('dashboard.colOrderCount'), dataIndex: 'orderCount' },
+            { title: t('dashboard.colPaymentAmount'), dataIndex: 'paymentAmount' },
+            { title: t('dashboard.colRefundAmount'), dataIndex: 'refundAmount' },
+            { title: t('dashboard.colNetRevenue'), dataIndex: 'netRevenue' },
           ]}
         />
       </Card>
 
-      <Card title="门店经营统计" extra={<PermissionButton permission="report:export" onClick={() => download('http://localhost:8080/api/finance-ops/reports/property-stats/export', 'property-stats.xlsx')}>导出统计</PermissionButton>}>
-        <Table rowKey="propertyId" dataSource={propertyStats} pagination={false}
+      <Card
+        title={t('dashboard.propertyStatsTitle')}
+        extra={(
+          <PermissionButton permission="report:export" onClick={() => download(propertyStatsExportUrl(), propertyFilename)}>
+            {t('dashboard.propertyStatsExport')}
+          </PermissionButton>
+        )}
+      >
+        <Table
+          rowKey="propertyId"
+          dataSource={propertyStats}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
-            { title: '门店', dataIndex: 'propertyName' },
-            { title: '房间数', dataIndex: 'roomCount' },
-            { title: '在住房间', dataIndex: 'occupiedRoomCount' },
-            { title: '入住率', dataIndex: 'occupancyRate' },
+            { title: t('dashboard.colProperty'), dataIndex: 'propertyName' },
+            { title: t('dashboard.colRoomCount'), dataIndex: 'roomCount' },
+            { title: t('dashboard.colOccupiedRoomCount'), dataIndex: 'occupiedRoomCount' },
+            { title: t('dashboard.colOccupancyRate'), dataIndex: 'occupancyRate' },
           ]}
         />
       </Card>

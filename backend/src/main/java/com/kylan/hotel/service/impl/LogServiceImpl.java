@@ -57,7 +57,7 @@ public class LogServiceImpl implements LogService {
         context.setCurrentPropertyId(currentProperty == null ? null : currentProperty.getId());
         context.setCurrentBrandId(currentProperty == null ? null : currentProperty.getBrandId());
         context.setCurrentGroupId(currentProperty == null ? null : currentProperty.getGroupId());
-        context.setAllowWideRangeSwitch(SecurityUtils.hasPermission("scope:all"));
+        context.setAllowWideRangeSwitch(SecurityUtils.hasPermission("scope:all") && SecurityUtils.currentPropertyId() == null);
         return context;
     }
 

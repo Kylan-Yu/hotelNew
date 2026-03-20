@@ -9,6 +9,7 @@ public class MemberProfile extends BaseEntity {
     private String memberNo;
     private String memberName;
     private String mobile;
+    private String gender;
     private Integer levelCode;
     private Integer pointBalance;
     private String status;

@@ -27,8 +27,8 @@ type QueryForm = {
 export function LogPage() {
   const [operationData, setOperationData] = useState<any[]>([])
   const [auditData, setAuditData] = useState<any[]>([])
-  const [opPage, setOpPage] = useState({ pageNo: 1, pageSize: 20, total: 0 })
-  const [auPage, setAuPage] = useState({ pageNo: 1, pageSize: 20, total: 0 })
+  const [opPage, setOpPage] = useState({ pageNo: 1, pageSize: 10, total: 0 })
+  const [auPage, setAuPage] = useState({ pageNo: 1, pageSize: 10, total: 0 })
   const [groupOptions, setGroupOptions] = useState<GroupOption[]>([])
   const [brandOptions, setBrandOptions] = useState<BrandOption[]>([])
   const [propertyOptions, setPropertyOptions] = useState<PropertyOption[]>([])
@@ -138,8 +138,8 @@ export function LogPage() {
         auForm.setFieldValue('propertyId', nextContext.currentPropertyId)
       }
 
-      loadOperation(1, 20)
-      loadAudit(1, 20)
+      loadOperation(1, 10)
+      loadAudit(1, 10)
     }
     init()
   }, [currentPropertyId])
@@ -231,6 +231,9 @@ export function LogPage() {
                   current: opPage.pageNo,
                   pageSize: opPage.pageSize,
                   total: opPage.total,
+                  showSizeChanger: true,
+                  pageSizeOptions: [10, 20, 50, 100],
+                  showQuickJumper: true,
                   onChange: (page, size) => loadOperation(page, size),
                 }}
               />
@@ -261,6 +264,9 @@ export function LogPage() {
                   current: auPage.pageNo,
                   pageSize: auPage.pageSize,
                   total: auPage.total,
+                  showSizeChanger: true,
+                  pageSizeOptions: [10, 20, 50, 100],
+                  showQuickJumper: true,
                   onChange: (page, size) => loadAudit(page, size),
                 }}
               />

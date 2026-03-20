@@ -50,9 +50,6 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     @Override
     public List<RoomTypeVO> list() {
         List<RoomTypeVO> list = hotelRoomTypeMapper.findAll();
-        if (SecurityUtils.hasPermission("scope:all")) {
-            return list;
-        }
         List<Long> scopes = SecurityUtils.propertyScopes();
         return list.stream().filter(item -> scopes.contains(item.getPropertyId())).toList();
     }

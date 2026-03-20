@@ -13,6 +13,7 @@ import {
 } from '../api/pricingApi'
 import { fetchProperties } from '../api/propertyApi'
 import { fetchRoomTypes } from '../api/roomTypeApi'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 interface PricingPageProps {
   view: 'calendar' | 'plans' | 'inventory'
@@ -24,6 +25,7 @@ export function PricingPage({ view }: PricingPageProps) {
   const [inventories, setInventories] = useState<any[]>([])
   const [properties, setProperties] = useState<any[]>([])
   const [roomTypes, setRoomTypes] = useState<any[]>([])
+  const [keyword, setKeyword] = useState('')
 
   const [filterPropertyId, setFilterPropertyId] = useState<number | undefined>()
   const [filterRoomTypeId, setFilterRoomTypeId] = useState<number | undefined>()
@@ -64,29 +66,35 @@ export function PricingPage({ view }: PricingPageProps) {
   }, [view])
 
   const filteredPlans = useMemo(() => {
+    const text = keyword.trim().toLowerCase()
     return plans.filter((item) => {
       if (filterPropertyId && item.propertyId !== filterPropertyId) return false
       if (filterRoomTypeId && item.roomTypeId !== filterRoomTypeId) return false
       if (filterDate && item.bizDate !== filterDate) return false
+      if (text && !JSON.stringify(item).toLowerCase().includes(text)) return false
       return true
     })
-  }, [plans, filterPropertyId, filterRoomTypeId, filterDate])
+  }, [plans, filterPropertyId, filterRoomTypeId, filterDate, keyword])
 
   const filteredInventories = useMemo(() => {
+    const text = keyword.trim().toLowerCase()
     return inventories.filter((item) => {
       if (filterPropertyId && item.propertyId !== filterPropertyId) return false
       if (filterRoomTypeId && item.roomTypeId !== filterRoomTypeId) return false
       if (filterDate && item.bizDate !== filterDate) return false
+      if (text && !JSON.stringify(item).toLowerCase().includes(text)) return false
       return true
     })
-  }, [inventories, filterPropertyId, filterRoomTypeId, filterDate])
+  }, [inventories, filterPropertyId, filterRoomTypeId, filterDate, keyword])
 
   const filteredRules = useMemo(() => {
+    const text = keyword.trim().toLowerCase()
     return rules.filter((item) => {
       if (filterPropertyId && item.propertyId !== filterPropertyId) return false
+      if (text && !JSON.stringify(item).toLowerCase().includes(text)) return false
       return true
     })
-  }, [rules, filterPropertyId])
+  }, [rules, filterPropertyId, keyword])
 
   return (
     <div>
@@ -117,11 +125,19 @@ export function PricingPage({ view }: PricingPageProps) {
           value={filterDate ? dayjs(filterDate) : undefined}
           onChange={(value) => setFilterDate(value ? value.format('YYYY-MM-DD') : undefined)}
         />
+        <Input.Search
+          allowClear
+          placeholder="模糊搜索（规则名/房型/标签）"
+          style={{ width: 300 }}
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
         <Button
           onClick={() => {
             setFilterPropertyId(undefined)
             setFilterRoomTypeId(undefined)
             setFilterDate(undefined)
+            setKeyword('')
           }}
         >
           重置
@@ -151,6 +167,7 @@ export function PricingPage({ view }: PricingPageProps) {
         <Table
           rowKey="id"
           dataSource={filteredPlans}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '民宿', dataIndex: 'propertyName' },
             { title: '房型', dataIndex: 'roomTypeName' },
@@ -172,6 +189,7 @@ export function PricingPage({ view }: PricingPageProps) {
           <Table
             rowKey="id"
             dataSource={filteredPlans}
+            pagination={DEFAULT_TABLE_PAGINATION}
             style={{ marginBottom: 16 }}
             columns={[
               { title: '民宿', dataIndex: 'propertyName' },
@@ -185,6 +203,7 @@ export function PricingPage({ view }: PricingPageProps) {
           <Table
             rowKey="id"
             dataSource={filteredRules}
+            pagination={DEFAULT_TABLE_PAGINATION}
             columns={[
               { title: '规则名称', dataIndex: 'ruleName' },
               { title: '规则类型', dataIndex: 'ruleType', render: (value: string) => dictText.priceRuleType(value) },
@@ -207,6 +226,7 @@ export function PricingPage({ view }: PricingPageProps) {
         <Table
           rowKey="id"
           dataSource={filteredInventories}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '民宿', dataIndex: 'propertyName' },
             { title: '房型', dataIndex: 'roomTypeName' },

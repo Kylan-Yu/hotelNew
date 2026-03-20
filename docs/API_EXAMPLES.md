@@ -1,31 +1,58 @@
-# API 示例 | API Examples
+﻿# API Examples | 接口示例
 
-## 登录 | Login
+> Base URL / 基础地址: `http://localhost:8080/api`
+
+## 1) Login | 登录
 ```bash
 curl -X POST 'http://localhost:8080/api/auth/login' \
   -H 'Content-Type: application/json' \
   -d '{
     "username": "admin",
-    "password": "123456"
+    "password": "Admin@123"
   }'
 ```
 
-## 创建门店 | Create Property
+## 2) Create Homestay Property | 新增民宿
 ```bash
 curl -X POST 'http://localhost:8080/api/properties' \
   -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <access_token>' \
   -d '{
-    "groupId": 1,
-    "brandId": 1,
-    "propertyCode": "KM001",
-    "propertyName": "昆明南屏街门店",
-    "businessMode": "HOTEL",
-    "city": "Kunming",
-    "address": "Nanping Street"
+    "propertyCode": "WESTLAKE-001",
+    "propertyName": "西湖云舍",
+    "businessMode": "HOMESTAY",
+    "contactPhone": "13800138000",
+    "city": "Hangzhou",
+    "address": "West Lake Street"
   }'
 ```
 
-## 查询门店列表 | List Properties
+## 3) Query Property List | 查询民宿列表
 ```bash
-curl 'http://localhost:8080/api/properties'
+curl 'http://localhost:8080/api/properties' \
+  -H 'Authorization: Bearer <access_token>'
+```
+
+## 4) Query Order Detail with Timeline | 查询订单详情（含房态时间线）
+```bash
+curl 'http://localhost:8080/api/orders/1' \
+  -H 'Authorization: Bearer <access_token>'
+```
+
+```bash
+curl 'http://localhost:8080/api/orders/1/timeline' \
+  -H 'Authorization: Bearer <access_token>'
+```
+
+## 5) Export Daily Report | 导出日报
+```bash
+curl -L 'http://localhost:8080/api/finance-ops/reports/daily/export' \
+  -H 'Authorization: Bearer <access_token>' \
+  -o daily-report.xlsx
+```
+
+## 6) Dictionary Items | 字典子项查询
+```bash
+curl 'http://localhost:8080/api/system/dicts/items?dictCode=ROOM_STATUS' \
+  -H 'Authorization: Bearer <access_token>'
 ```

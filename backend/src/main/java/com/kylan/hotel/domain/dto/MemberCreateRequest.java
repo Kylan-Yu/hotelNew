@@ -15,5 +15,7 @@ public class MemberCreateRequest {
     @NotBlank(message = "mobile is required")
     private String mobile;
 
+    private String gender;
+
     private Integer levelCode;
 }

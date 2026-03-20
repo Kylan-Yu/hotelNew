@@ -19,10 +19,12 @@ const PROPERTY_SCOPES_KEY = 'hms_property_scopes'
 const CURRENT_PROPERTY_KEY = 'hms_current_property'
 
 const getStorageValue = (key: string): string => localStorage.getItem(key) || ''
+const isJwtToken = (token: string) => /^[^.]+\.[^.]+\.[^.]+$/.test(token)
+const normalizeToken = (token: string) => (isJwtToken(token) ? token : '')
 
 const initialState: AuthState = {
-  accessToken: getStorageValue(ACCESS_TOKEN_KEY),
-  refreshToken: getStorageValue(REFRESH_TOKEN_KEY),
+  accessToken: normalizeToken(getStorageValue(ACCESS_TOKEN_KEY)),
+  refreshToken: normalizeToken(getStorageValue(REFRESH_TOKEN_KEY)),
   username: getStorageValue(USERNAME_KEY),
   nickname: getStorageValue(NICKNAME_KEY),
   permissions: JSON.parse(localStorage.getItem(PERMISSIONS_KEY) || '[]'),

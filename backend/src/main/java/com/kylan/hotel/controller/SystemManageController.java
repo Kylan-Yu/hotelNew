@@ -2,6 +2,8 @@ package com.kylan.hotel.controller;
 
 import com.kylan.hotel.common.ApiResponse;
 import com.kylan.hotel.domain.dto.SystemDictCreateRequest;
+import com.kylan.hotel.domain.dto.SystemDictItemCreateRequest;
+import com.kylan.hotel.domain.dto.SystemDictItemUpdateRequest;
 import com.kylan.hotel.domain.dto.SystemDictUpdateRequest;
 import com.kylan.hotel.domain.dto.SystemParamCreateRequest;
 import com.kylan.hotel.domain.dto.SystemParamUpdateRequest;
@@ -10,6 +12,7 @@ import com.kylan.hotel.domain.dto.SystemRoleUpdateRequest;
 import com.kylan.hotel.domain.dto.SystemUserCreateRequest;
 import com.kylan.hotel.domain.dto.SystemUserUpdateRequest;
 import com.kylan.hotel.domain.vo.SystemDictVO;
+import com.kylan.hotel.domain.vo.SystemDictItemVO;
 import com.kylan.hotel.domain.vo.SystemMenuVO;
 import com.kylan.hotel.domain.vo.SystemParamVO;
 import com.kylan.hotel.domain.vo.SystemPermissionVO;
@@ -96,6 +99,27 @@ public class SystemManageController {
     @PreAuthorize("hasAuthority('sys:dict:write') or hasAuthority('*')")
     public ApiResponse<Long> createDict(@Valid @RequestBody SystemDictCreateRequest request) {
         return ApiResponse.success(systemManageService.createDict(request));
+    }
+
+    @GetMapping("/dicts/{dictCode}/items")
+    @PreAuthorize("hasAuthority('sys:dict:read')")
+    public ApiResponse<List<SystemDictItemVO>> dictItems(@PathVariable("dictCode") String dictCode) {
+        return ApiResponse.success(systemManageService.dictItems(dictCode, false));
+    }
+
+    @PostMapping("/dicts/{dictCode}/items")
+    @PreAuthorize("hasAuthority('sys:dict:write') or hasAuthority('*')")
+    public ApiResponse<Long> createDictItem(@PathVariable("dictCode") String dictCode,
+                                            @Valid @RequestBody SystemDictItemCreateRequest request) {
+        return ApiResponse.success(systemManageService.createDictItem(dictCode, request));
+    }
+
+    @PutMapping("/dict-items/{id}")
+    @PreAuthorize("hasAuthority('sys:dict:write') or hasAuthority('*')")
+    public ApiResponse<Void> updateDictItem(@PathVariable("id") Long id,
+                                            @Valid @RequestBody SystemDictItemUpdateRequest request) {
+        systemManageService.updateDictItem(id, request);
+        return ApiResponse.success(null);
     }
 
     @PutMapping("/dicts/{dictCode}")

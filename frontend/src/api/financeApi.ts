@@ -1,4 +1,4 @@
-﻿import { http } from './http'
+﻿import { buildApiUrl, http } from './http'
 
 export async function fetchDashboard() {
   const res = await http.get('/finance-ops/dashboard')
@@ -74,9 +74,9 @@ export async function updateMaintenanceTicketStatus(payload: any): Promise<void>
 }
 
 export function dailyReportExportUrl() {
-  return 'http://localhost:8080/api/finance-ops/reports/daily/export'
+  return buildApiUrl('/finance-ops/reports/daily/export')
 }
 
 export function propertyStatsExportUrl() {
-  return 'http://localhost:8080/api/finance-ops/reports/property-stats/export'
+  return buildApiUrl('/finance-ops/reports/property-stats/export')
 }

@@ -30,9 +30,8 @@ public class DataScopeContextFilter extends OncePerRequestFilter {
             List<Long> brandIds = List.of();
             List<Long> groupIds = List.of();
             try {
-                all = SecurityUtils.hasPermission("scope:all");
                 propertyIds = SecurityUtils.propertyScopes();
-                if (!all && !propertyIds.isEmpty()) {
+                if (!propertyIds.isEmpty()) {
                     brandIds = hotelPropertyMapper.findBrandIdsByPropertyIds(propertyIds);
                     groupIds = hotelPropertyMapper.findGroupIdsByPropertyIds(propertyIds);
                 }

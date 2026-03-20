@@ -1,5 +1,6 @@
 ﻿import { Alert, App, Button, Form, Input, Modal, Select, Space, Switch, Table } from 'antd'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   PropertyCreatePayload,
@@ -9,14 +10,19 @@ import {
   updateProperty,
   updatePropertyStatus,
 } from '../api/propertyApi'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
+import { useDictOptions } from '../hooks/useDictOptions'
 
 export function PropertyListPage() {
   const [data, setData] = useState<PropertyItem[]>([])
+  const [keyword, setKeyword] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<PropertyItem | null>(null)
   const [form] = Form.useForm<PropertyCreatePayload>()
   const navigate = useNavigate()
   const { message } = App.useApp()
+  const { t } = useTranslation()
+  const { options: businessModeOptions, labelMap: businessModeLabelMap } = useDictOptions('BUSINESS_MODE')
 
   const loadData = async () => {
     const propertyList = await fetchProperties()
@@ -27,10 +33,19 @@ export function PropertyListPage() {
     loadData()
   }, [])
 
+  const filteredData = useMemo(() => {
+    if (!keyword.trim()) {
+      return data
+    }
+    const text = keyword.trim().toLowerCase()
+    return data.filter((item) => String(item.propertyCode || '').toLowerCase().includes(text)
+      || String(item.propertyName || '').toLowerCase().includes(text))
+  }, [data, keyword])
+
   const handleAdd = () => {
     setEditing(null)
     form.resetFields()
-    form.setFieldValue('businessMode', 'HOMESTAY')
+    form.setFieldValue('businessMode', businessModeOptions[0]?.value || 'HOMESTAY')
     setOpen(true)
   }
 
@@ -61,11 +76,12 @@ export function PropertyListPage() {
     }
     if (editing) {
       await updateProperty(editing.id, payload)
-      message.success('民宿更新成功')
+      message.success(t('property.updatedSuccess'))
     } else {
       await createProperty(payload)
-      message.success('民宿创建成功')
+      message.success(t('property.createdSuccess'))
     }
+    window.dispatchEvent(new Event('hms:property-options-updated'))
     setOpen(false)
     form.resetFields()
     loadData()
@@ -73,53 +89,51 @@ export function PropertyListPage() {
 
   const handleStatusChange = async (row: PropertyItem, checked: boolean) => {
     await updatePropertyStatus(row.id, checked ? 1 : 0)
-    message.success('状态更新成功')
+    message.success(t('property.statusUpdatedSuccess'))
+    window.dispatchEvent(new Event('hms:property-options-updated'))
     loadData()
   }
 
   return (
     <div>
-      <Alert
-        type="info"
-        showIcon
-        style={{ marginBottom: 12 }}
-        message="民宿多店模式：一个运营者可直接管理多家民宿，无需集团/品牌等组织层级。"
-      />
+      <Alert type="info" showIcon style={{ marginBottom: 12 }} message={t('property.infoBanner')} />
       <Space style={{ marginBottom: 16 }}>
-        <Button type="primary" onClick={handleAdd}>
-          新增民宿
-        </Button>
+        <Button type="primary" onClick={handleAdd}>{t('property.addButton')}</Button>
+        <Input
+          allowClear
+          placeholder={t('property.searchPlaceholder')}
+          style={{ width: 320 }}
+          value={keyword}
+          onChange={(event) => setKeyword(event.target.value)}
+        />
       </Space>
       <Table
         rowKey="id"
-        dataSource={data}
+        dataSource={filteredData}
+        pagination={DEFAULT_TABLE_PAGINATION}
         columns={[
-          { title: '民宿编码', dataIndex: 'propertyCode', width: 150 },
-          { title: '民宿名称', dataIndex: 'propertyName', width: 240 },
+          { title: t('property.colCode'), dataIndex: 'propertyCode', width: 150 },
+          { title: t('property.colName'), dataIndex: 'propertyName', width: 240 },
           {
-            title: '经营模式',
+            title: t('property.colBusinessMode'),
             dataIndex: 'businessMode',
-            render: (value: string) => (value === 'HOMESTAY' ? '民宿模式' : '酒店模式'),
+            render: (value: string) => businessModeLabelMap[value] || value,
             width: 120,
           },
-          { title: '城市', dataIndex: 'city', width: 120 },
-          { title: '联系电话', dataIndex: 'contactPhone', width: 140 },
+          { title: t('property.colCity'), dataIndex: 'city', width: 120 },
+          { title: t('property.colPhone'), dataIndex: 'contactPhone', width: 140 },
           {
-            title: '状态',
+            title: t('property.colStatus'),
             width: 100,
             render: (_, row) => <Switch checked={row.status === 1} onChange={(checked) => handleStatusChange(row, checked)} />,
           },
           {
-            title: '操作',
+            title: t('property.colActions'),
             width: 160,
             render: (_, row) => (
               <Space>
-                <Button type="link" onClick={() => handleEdit(row)}>
-                  编辑
-                </Button>
-                <Button type="link" onClick={() => navigate(`/assets/homestays/${row.id}`)}>
-                  详情
-                </Button>
+                <Button type="link" onClick={() => handleEdit(row)}>{t('common.edit')}</Button>
+                <Button type="link" onClick={() => navigate(`/assets/homestays/${row.id}`)}>{t('common.details')}</Button>
               </Space>
             ),
           },
@@ -127,29 +141,29 @@ export function PropertyListPage() {
       />
 
       <Modal
-        title={editing ? '编辑民宿' : '新增民宿'}
+        title={editing ? t('property.modalEditTitle') : t('property.modalAddTitle')}
         open={open}
         onOk={handleSave}
         onCancel={() => setOpen(false)}
         destroyOnClose
       >
-        <Form layout="vertical" form={form} initialValues={{ businessMode: 'HOMESTAY' }}>
-          <Form.Item name="propertyCode" label="民宿编码" rules={[{ required: true, message: '请输入民宿编码' }]}>
-            <Input disabled={!!editing} placeholder="例如: HS_SH_001" />
+        <Form layout="vertical" form={form} initialValues={{ businessMode: businessModeOptions[0]?.value || 'HOMESTAY' }}>
+          <Form.Item name="propertyCode" label={t('property.formCode')} rules={[{ required: true, message: t('property.formCodeRequired') }]}>
+            <Input disabled={!!editing} placeholder={t('property.formCodeExample')} />
           </Form.Item>
-          <Form.Item name="propertyName" label="民宿名称" rules={[{ required: true, message: '请输入民宿名称' }]}>
-            <Input placeholder="例如: 静栖里·外滩店" />
+          <Form.Item name="propertyName" label={t('property.formName')} rules={[{ required: true, message: t('property.formNameRequired') }]}>
+            <Input placeholder={t('property.formNameExample')} />
           </Form.Item>
-          <Form.Item name="businessMode" label="经营模式" rules={[{ required: true }]}>
-            <Select options={[{ label: '民宿', value: 'HOMESTAY' }, { label: '酒店', value: 'HOTEL' }]} />
+          <Form.Item name="businessMode" label={t('property.formBusinessMode')} rules={[{ required: true }]}>
+            <Select options={businessModeOptions} />
           </Form.Item>
-          <Form.Item name="contactPhone" label="联系电话">
+          <Form.Item name="contactPhone" label={t('property.formPhone')}>
             <Input />
           </Form.Item>
-          <Form.Item name="city" label="城市">
+          <Form.Item name="city" label={t('property.formCity')}>
             <Input />
           </Form.Item>
-          <Form.Item name="address" label="地址">
+          <Form.Item name="address" label={t('property.formAddress')}>
             <Input />
           </Form.Item>
         </Form>
@@ -157,3 +171,4 @@ export function PropertyListPage() {
     </div>
   )
 }
+

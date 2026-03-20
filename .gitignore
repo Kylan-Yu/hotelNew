@@ -42,3 +42,8 @@ Thumbs.db
 
 # Logs
 logs/
+frontend-dev.log
+mock-server.log
+
+# TypeScript build cache
+*.tsbuildinfo

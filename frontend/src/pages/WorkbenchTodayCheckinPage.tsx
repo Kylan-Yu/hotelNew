@@ -3,6 +3,7 @@ import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { fetchOrders } from '../api/orderApi'
 import { dictText } from '../constants/businessDict'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 export function WorkbenchTodayCheckinPage() {
   const [data, setData] = useState<any[]>([])
@@ -21,7 +22,7 @@ export function WorkbenchTodayCheckinPage() {
       <Table
         rowKey="id"
         dataSource={data}
-        pagination={false}
+        pagination={DEFAULT_TABLE_PAGINATION}
         columns={[
           { title: '订单号', dataIndex: 'orderNo' },
           { title: '民宿', dataIndex: 'propertyName' },
@@ -33,3 +34,7 @@ export function WorkbenchTodayCheckinPage() {
     </Card>
   )
 }
+
+
+
+

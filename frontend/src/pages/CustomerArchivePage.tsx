@@ -1,7 +1,9 @@
 ﻿import { App, Button, Card, Form, Input, Modal, Select, Space, Table } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
-import { dictText } from '../constants/businessDict'
 import { createMemberPreference, fetchMemberPreferences, fetchMembers } from '../api/memberApi'
+import { dictText } from '../constants/businessDict'
+import { useDictOptions } from '../hooks/useDictOptions'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 export function CustomerArchivePage() {
   const [members, setMembers] = useState<any[]>([])
@@ -10,6 +12,7 @@ export function CustomerArchivePage() {
   const [open, setOpen] = useState(false)
   const [form] = Form.useForm<any>()
   const { message } = App.useApp()
+  const { labelMap: genderLabelMap } = useDictOptions('GENDER')
 
   const loadData = async () => {
     const [memberList, preferenceList] = await Promise.all([fetchMembers(), fetchMemberPreferences()])
@@ -58,13 +61,14 @@ export function CustomerArchivePage() {
         columns={[
           { title: '会员编号', dataIndex: 'memberNo', width: 160 },
           { title: '姓名', dataIndex: 'memberName', width: 120 },
+          { title: '性别', dataIndex: 'gender', width: 120, render: (value: string) => genderLabelMap[value] || value || '-' },
           { title: '手机号', dataIndex: 'mobile', width: 140 },
           { title: '等级', dataIndex: 'levelCode', width: 90 },
           { title: '积分余额', dataIndex: 'pointBalance', width: 100 },
           { title: '状态', dataIndex: 'status', width: 120, render: (value: string) => dictText.memberStatus(value) },
           { title: '归属民宿', dataIndex: 'propertyName' },
         ]}
-        pagination={{ pageSize: 8 }}
+        pagination={DEFAULT_TABLE_PAGINATION}
       />
 
       <Table
@@ -76,7 +80,7 @@ export function CustomerArchivePage() {
           { title: '偏好类型', dataIndex: 'preferenceType', width: 180 },
           { title: '偏好值', dataIndex: 'preferenceValue' },
         ]}
-        pagination={{ pageSize: 6 }}
+        pagination={DEFAULT_TABLE_PAGINATION}
       />
 
       <Modal
@@ -115,3 +119,9 @@ export function CustomerArchivePage() {
     </Card>
   )
 }
+
+
+
+
+
+

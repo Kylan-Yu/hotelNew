@@ -1,9 +1,11 @@
-﻿import { Card, Table, Tag } from 'antd'
-import { useEffect, useState } from 'react'
+﻿import { Card, Input, Table, Tag } from 'antd'
+import { useEffect, useMemo, useState } from 'react'
 import { fetchInventories } from '../api/pricingApi'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 export function OverbookWarningPage() {
   const [data, setData] = useState<any[]>([])
+  const [keyword, setKeyword] = useState('')
 
   useEffect(() => {
     const load = async () => {
@@ -13,11 +15,26 @@ export function OverbookWarningPage() {
     load()
   }, [])
 
+  const filteredData = useMemo(() => {
+    const text = keyword.trim().toLowerCase()
+    if (!text) return data
+    return data.filter((item) => JSON.stringify(item).toLowerCase().includes(text))
+  }, [data, keyword])
+
   return (
-    <Card title="超售预警">
+    <Card title="超售预警" extra={(
+      <Input.Search
+        allowClear
+        placeholder="搜索民宿/房型/日期"
+        value={keyword}
+        onChange={(e) => setKeyword(e.target.value)}
+        style={{ width: 260 }}
+      />
+    )}>
       <Table
         rowKey="id"
-        dataSource={data}
+        dataSource={filteredData}
+        pagination={DEFAULT_TABLE_PAGINATION}
         columns={[
           { title: '民宿', dataIndex: 'propertyName' },
           { title: '房型', dataIndex: 'roomTypeName' },

@@ -25,6 +25,16 @@ export async function fetchSystemDicts(): Promise<any[]> {
   return res.data.data
 }
 
+export async function fetchSystemDictItems(dictCode: string): Promise<any[]> {
+  const res = await http.get(`/system/dicts/${dictCode}/items`)
+  return res.data.data
+}
+
+export async function fetchPublicDictItems(dictCode: string): Promise<any[]> {
+  const res = await http.get(`/dicts/${dictCode}/items`)
+  return res.data.data
+}
+
 export async function fetchSystemParams(): Promise<any[]> {
   const res = await http.get('/system/params')
   return res.data.data
@@ -55,6 +65,15 @@ export async function createSystemDict(payload: any): Promise<number> {
 
 export async function updateSystemDict(dictCode: string, payload: any): Promise<void> {
   await http.put(`/system/dicts/${dictCode}`, payload)
+}
+
+export async function createSystemDictItem(dictCode: string, payload: any): Promise<number> {
+  const res = await http.post(`/system/dicts/${dictCode}/items`, payload)
+  return res.data.data
+}
+
+export async function updateSystemDictItem(id: number, payload: any): Promise<void> {
+  await http.put(`/system/dict-items/${id}`, payload)
 }
 
 export async function createSystemParam(payload: any): Promise<number> {

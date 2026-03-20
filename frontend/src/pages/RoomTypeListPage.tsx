@@ -1,5 +1,5 @@
 ﻿import { App, Button, Form, Input, InputNumber, Modal, Select, Space, Switch, Table } from 'antd'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { PropertyItem, fetchProperties } from '../api/propertyApi'
 import {
   RoomTypeCreatePayload,
@@ -9,10 +9,12 @@ import {
   updateRoomType,
   updateRoomTypeStatus,
 } from '../api/roomTypeApi'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 export function RoomTypeListPage() {
   const [data, setData] = useState<RoomTypeItem[]>([])
   const [properties, setProperties] = useState<PropertyItem[]>([])
+  const [keyword, setKeyword] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<RoomTypeItem | null>(null)
   const [form] = Form.useForm<RoomTypeCreatePayload>()
@@ -27,6 +29,19 @@ export function RoomTypeListPage() {
   useEffect(() => {
     loadData()
   }, [])
+
+  const filteredData = useMemo(() => {
+    if (!keyword.trim()) {
+      return data
+    }
+    const text = keyword.trim().toLowerCase()
+    return data.filter((item) => {
+      return (
+        String(item.roomTypeCode || '').toLowerCase().includes(text) ||
+        String(item.roomTypeName || '').toLowerCase().includes(text)
+      )
+    })
+  }, [data, keyword])
 
   const handleAdd = () => {
     setEditing(null)
@@ -79,10 +94,18 @@ export function RoomTypeListPage() {
         <Button type="primary" onClick={handleAdd}>
           新增房型
         </Button>
+        <Input
+          allowClear
+          placeholder="搜索房型编码 / 房型名称"
+          style={{ width: 320 }}
+          value={keyword}
+          onChange={(event) => setKeyword(event.target.value)}
+        />
       </Space>
       <Table
         rowKey="id"
-        dataSource={data}
+        dataSource={filteredData}
+        pagination={DEFAULT_TABLE_PAGINATION}
         columns={[
           { title: '房型编码', dataIndex: 'roomTypeCode' },
           { title: '房型名称', dataIndex: 'roomTypeName' },

@@ -11,7 +11,7 @@ import {
   otaPushPrice,
 } from '../api/otaApi'
 import { fetchProperties } from '../api/propertyApi'
-
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 interface OtaPageProps {
   view: 'config' | 'mapping'
 }
@@ -31,6 +31,7 @@ export function OtaPage({ view }: OtaPageProps) {
 
   const [channelCode, setChannelCode] = useState('DOUYIN')
   const [propertyId, setPropertyId] = useState<number | undefined>()
+  const [keyword, setKeyword] = useState('')
 
   const { message } = App.useApp()
 
@@ -60,6 +61,18 @@ export function OtaPage({ view }: OtaPageProps) {
     return mappings.filter((item) => item.channelCode === channelCode).length
   }, [mappings, channelCode])
 
+  const filteredSyncLogs = useMemo(() => {
+    const text = keyword.trim().toLowerCase()
+    if (!text) return syncLogs
+    return syncLogs.filter((item) => JSON.stringify(item).toLowerCase().includes(text))
+  }, [syncLogs, keyword])
+
+  const filteredMappings = useMemo(() => {
+    const text = keyword.trim().toLowerCase()
+    if (!text) return mappings
+    return mappings.filter((item) => JSON.stringify(item).toLowerCase().includes(text))
+  }, [mappings, keyword])
+
   return (
     <div>
       <Typography.Title level={4} style={{ marginTop: 0 }}>
@@ -76,6 +89,13 @@ export function OtaPage({ view }: OtaPageProps) {
               value={propertyId}
               options={properties.map((item) => ({ label: item.propertyName, value: item.id }))}
               onChange={setPropertyId}
+            />
+            <Input.Search
+              allowClear
+              style={{ width: 280 }}
+              placeholder="模糊搜索（业务类型/业务标识）"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
             />
             <PermissionButton
               permission="ota:write"
@@ -111,7 +131,7 @@ export function OtaPage({ view }: OtaPageProps) {
 
           <Table
             rowKey="id"
-            dataSource={syncLogs}
+            dataSource={filteredSyncLogs}
             columns={[
               { title: '渠道', dataIndex: 'channelCode', width: 120, render: (value: string) => dictText.channelCode(value) },
               { title: '业务类型', dataIndex: 'bizType', width: 120 },
@@ -119,7 +139,7 @@ export function OtaPage({ view }: OtaPageProps) {
               { title: '状态', dataIndex: 'syncStatus', width: 120, render: (value: string) => dictText.syncStatus(value) },
               { title: '时间', dataIndex: 'createdAt' },
             ]}
-            pagination={{ pageSize: 8 }}
+            pagination={DEFAULT_TABLE_PAGINATION}
           />
         </>
       )}
@@ -128,6 +148,13 @@ export function OtaPage({ view }: OtaPageProps) {
         <>
           <Space style={{ marginBottom: 16 }}>
             <Typography.Text>当前渠道映射数量：{currentMappingCount}</Typography.Text>
+            <Input.Search
+              allowClear
+              style={{ width: 280 }}
+              placeholder="模糊搜索（映射类型/本地ID/渠道ID）"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+            />
             <PermissionButton permission="ota:write" type="primary" onClick={() => setOpen(true)}>
               新增映射
             </PermissionButton>
@@ -135,7 +162,7 @@ export function OtaPage({ view }: OtaPageProps) {
 
           <Table
             rowKey="id"
-            dataSource={mappings}
+            dataSource={filteredMappings}
             columns={[
               { title: '民宿', dataIndex: 'propertyId', width: 160, render: (value: number) => propertyNameById[value] || `民宿${value}` },
               { title: '渠道', dataIndex: 'channelCode', width: 120, render: (value: string) => dictText.channelCode(value) },
@@ -154,6 +181,7 @@ export function OtaPage({ view }: OtaPageProps) {
               { title: '渠道业务ID', dataIndex: 'channelBizId', width: 180 },
               { title: '备注', dataIndex: 'remark' },
             ]}
+            pagination={DEFAULT_TABLE_PAGINATION}
           />
         </>
       )}
@@ -201,3 +229,7 @@ export function OtaPage({ view }: OtaPageProps) {
     </div>
   )
 }
+
+
+
+

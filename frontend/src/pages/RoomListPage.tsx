@@ -12,24 +12,26 @@ import {
   updateRoomStatus,
 } from '../api/roomApi'
 import { RoomTypeItem, fetchRoomTypes } from '../api/roomTypeApi'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
+import { useDictOptions } from '../hooks/useDictOptions'
 
-const ROOM_STATUS_OPTIONS = [
-  { label: '空净', value: 'VACANT_CLEAN', color: 'green' },
-  { label: '在住', value: 'OCCUPIED', color: 'blue' },
-  { label: '待清扫', value: 'VACANT_DIRTY', color: 'orange' },
-  { label: '维修', value: 'MAINTENANCE', color: 'red' },
-  { label: '锁房', value: 'LOCKED', color: 'purple' },
-]
-
-const roomStatusText = (status: string) => {
-  const target = ROOM_STATUS_OPTIONS.find((item) => item.value === status)
-  return target?.label || status
+const STATUS_COLOR_MAP: Record<string, string> = {
+  VACANT_CLEAN: 'green',
+  OCCUPIED: 'blue',
+  VACANT_DIRTY: 'orange',
+  MAINTENANCE: 'red',
+  LOCKED: 'purple',
 }
 
 export function RoomListPage() {
   const [data, setData] = useState<RoomItem[]>([])
   const [properties, setProperties] = useState<PropertyItem[]>([])
   const [roomTypes, setRoomTypes] = useState<RoomTypeItem[]>([])
+  const [roomNoKeyword, setRoomNoKeyword] = useState('')
+  const [filterRoomTypeId, setFilterRoomTypeId] = useState<number | undefined>()
+  const [filterFloorNo, setFilterFloorNo] = useState('')
+  const [filterPropertyId, setFilterPropertyId] = useState<number | undefined>()
+  const [filterStatus, setFilterStatus] = useState<string | undefined>()
   const [open, setOpen] = useState(false)
   const [statusOpen, setStatusOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -40,6 +42,9 @@ export function RoomListPage() {
   const [form] = Form.useForm<RoomCreatePayload>()
   const [statusForm] = Form.useForm<{ status: string; reason?: string }>()
   const { message } = App.useApp()
+  const { options: roomStatusOptions, labelMap: roomStatusLabelMap } = useDictOptions('ROOM_STATUS')
+
+  const roomStatusText = (status: string) => roomStatusLabelMap[status] || status
 
   const loadData = async () => {
     const [roomList, propertyList, roomTypeList] = await Promise.all([fetchRooms(), fetchProperties(), fetchRoomTypes()])
@@ -59,13 +64,28 @@ export function RoomListPage() {
     return roomTypes.filter((item) => item.propertyId === selectedPropertyId)
   }, [roomTypes, selectedPropertyId])
 
-  const statusColorMap = useMemo(() => {
-    const map: Record<string, string> = {}
-    ROOM_STATUS_OPTIONS.forEach((item) => {
-      map[item.value] = item.color
+  const filteredData = useMemo(() => {
+    const roomNo = roomNoKeyword.trim().toLowerCase()
+    const floorNo = filterFloorNo.trim().toLowerCase()
+    return data.filter((item) => {
+      if (roomNo && !String(item.roomNo || '').toLowerCase().includes(roomNo)) {
+        return false
+      }
+      if (filterRoomTypeId && item.roomTypeId !== filterRoomTypeId) {
+        return false
+      }
+      if (floorNo && !String(item.floorNo || '').toLowerCase().includes(floorNo)) {
+        return false
+      }
+      if (filterPropertyId && item.propertyId !== filterPropertyId) {
+        return false
+      }
+      if (filterStatus && item.status !== filterStatus) {
+        return false
+      }
+      return true
     })
-    return map
-  }, [])
+  }, [data, filterFloorNo, filterPropertyId, filterRoomTypeId, filterStatus, roomNoKeyword])
 
   const handleAdd = () => {
     setEditing(null)
@@ -131,10 +151,49 @@ export function RoomListPage() {
         <Button type="primary" onClick={handleAdd}>
           新增房间
         </Button>
+        <Input
+          allowClear
+          placeholder="搜索房号"
+          style={{ width: 160 }}
+          value={roomNoKeyword}
+          onChange={(event) => setRoomNoKeyword(event.target.value)}
+        />
+        <Select
+          allowClear
+          placeholder="筛选房型"
+          style={{ width: 180 }}
+          value={filterRoomTypeId}
+          onChange={(value) => setFilterRoomTypeId(value)}
+          options={roomTypes.map((item) => ({ label: item.roomTypeName, value: item.id }))}
+        />
+        <Input
+          allowClear
+          placeholder="筛选楼层"
+          style={{ width: 140 }}
+          value={filterFloorNo}
+          onChange={(event) => setFilterFloorNo(event.target.value)}
+        />
+        <Select
+          allowClear
+          placeholder="筛选民宿"
+          style={{ width: 180 }}
+          value={filterPropertyId}
+          onChange={(value) => setFilterPropertyId(value)}
+          options={properties.map((item) => ({ label: item.propertyName, value: item.id }))}
+        />
+        <Select
+          allowClear
+          placeholder="筛选房态"
+          style={{ width: 200 }}
+          value={filterStatus}
+          onChange={(value) => setFilterStatus(value)}
+          options={roomStatusOptions.map((item) => ({ label: item.label, value: item.value }))}
+        />
       </Space>
       <Table
         rowKey="id"
-        dataSource={data}
+        dataSource={filteredData}
+        pagination={DEFAULT_TABLE_PAGINATION}
         columns={[
           { title: '房号', dataIndex: 'roomNo' },
           { title: '楼层', dataIndex: 'floorNo' },
@@ -142,7 +201,7 @@ export function RoomListPage() {
           { title: '房型', dataIndex: 'roomTypeName' },
           {
             title: '房态',
-            render: (_, row) => <Tag color={statusColorMap[row.status] || 'default'}>{roomStatusText(row.status)}</Tag>,
+            render: (_, row) => <Tag color={STATUS_COLOR_MAP[row.status] || 'default'}>{roomStatusText(row.status)}</Tag>,
           },
           {
             title: '操作',
@@ -178,7 +237,7 @@ export function RoomListPage() {
           <Form.Item name="roomTypeId" label="房型" rules={[{ required: true }]}>
             <Select options={filteredRoomTypes.map((rt) => ({ label: `${rt.roomTypeCode} - ${rt.roomTypeName}`, value: rt.id }))} />
           </Form.Item>
-          <Form.Item name="roomNo" label="房号" rules={[{ required: true }]}> 
+          <Form.Item name="roomNo" label="房号" rules={[{ required: true }]}>
             <Input disabled={!!editing} />
           </Form.Item>
           <Form.Item name="floorNo" label="楼层"><Input /></Form.Item>
@@ -188,7 +247,7 @@ export function RoomListPage() {
       <Modal title="变更房态" open={statusOpen} onOk={handleStatusSave} onCancel={() => setStatusOpen(false)} destroyOnClose>
         <Form layout="vertical" form={statusForm}>
           <Form.Item name="status" label="目标房态" rules={[{ required: true }]}>
-            <Select options={ROOM_STATUS_OPTIONS.map((item) => ({ label: item.label, value: item.value }))} />
+            <Select options={roomStatusOptions.map((item) => ({ label: item.label, value: item.value }))} />
           </Form.Item>
           <Form.Item name="reason" label="变更原因">
             <Input.TextArea rows={3} />
@@ -200,7 +259,7 @@ export function RoomListPage() {
         <Table
           rowKey="id"
           dataSource={statusLogs}
-          pagination={false}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '原状态', dataIndex: 'oldStatus', render: (value: string) => roomStatusText(value) },
             { title: '新状态', dataIndex: 'newStatus', render: (value: string) => roomStatusText(value) },
@@ -213,3 +272,4 @@ export function RoomListPage() {
     </div>
   )
 }
+

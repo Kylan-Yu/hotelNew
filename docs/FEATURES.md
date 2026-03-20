@@ -1,296 +1,81 @@
-# 酒店管理系统详细功能点（贴合简历技术栈）
+﻿# Features | 功能清单
 
-## 一、产品定位
-系统定位为 **连锁酒店 / 连锁民宿 / 单体酒店 / 单体民宿** 的统一经营平台。支持同一集团下不同门店切换不同经营模式，例如：
-- A 店：标准酒店模式
-- B 店：精品民宿模式
-- C 店：公寓/长租模式（可扩展）
+## Product Positioning | 产品定位
+- Homestay-first, multi-property operations platform.
+- Supports one operator managing multiple homestays/properties.
+- Keeps group/brand dimensions as compatibility extension, not default IA.
 
-因此系统从设计上必须支持：
-1. 多集团 / 多品牌 / 多门店
-2. 酒店 / 民宿模式切换
-3. 多渠道订单与库存同步
-4. 渠道商品映射与幂等同步
-5. 集团级经营分析
+- 以民宿多店运营为核心的平台。
+- 支持一个运营者管理多家民宿/多套房源。
+- 集团/品牌能力保留为扩展，不作为默认主视角。
 
----
+## Core Modules | 核心模块
 
-## 二、系统角色
-### 2.1 平台管理员
-- 管理集团、品牌、门店
-- 配置权限、菜单、角色
-- 配置渠道接入参数
-- 查看全局日志与监控
+### 1. Auth & Security | 认证与安全
+- JWT access/refresh token.
+- RBAC with menu + button-level permissions.
+- Property-scoped data access with `currentProperty` first strategy.
+- SQL-level data scope placeholder injection.
 
-### 2.2 集团运营
-- 查看集团全部门店经营数据
-- 管理营销活动
-- 制定统一定价策略
-- 查看渠道销售表现
+- JWT 双令牌机制。
+- 菜单级与按钮级 RBAC。
+- currentProperty 优先的数据收敛。
+- SQL 级数据权限注入。
 
-### 2.3 门店店长
-- 管理本门店房型、房间、价格、员工
-- 查看门店入住率、营收
-- 处理维修、投诉、审批
+### 2. Asset Management | 房源管理
+- Property (homestay), room type, room, room status management.
+- Dictionary-driven options (business mode, room status, gender).
+- Property switch from top-right context selector.
 
-### 2.4 前台人员
-- 创建订单
-- 办理入住 / 退房
-- 换房 / 续住 / 补录客人信息
-- 收款与打印单据
+- 民宿、房型、房间、房态管理。
+- 字典驱动取值（经营模式、房态、性别）。
+- 顶部民宿切换联动。
 
-### 2.5 客房保洁
-- 接收清扫任务
-- 更新房态
-- 上报维修问题
+### 3. Order & Stay | 订单与入住
+- Reservation/order lifecycle.
+- Check-in, in-house stay management, extend stay, change room, checkout, cancel.
+- Order detail page with payment/deposit flows and room-status timeline.
 
-### 2.6 财务人员
-- 查看账单
-- 渠道对账
-- 发票管理
-- 日结 / 月结
+- 预订/订单状态流转。
+- 入住、在住、续住、换房、退房、取消。
+- 订单详情页含支付流水与房态时间线。
 
----
+### 4. Pricing & Inventory | 价格与库存
+- Pricing calendar, pricing plan, inventory control, overbooking warning.
+- Extension points for long-stay/hourly/homestay pricing variants.
 
-## 三、功能模块详解
+- 房价日历、价格计划、库存控制、超售预警。
+- 预留连住价/钟点房/民宿扩展位。
 
-### 3.1 认证与权限模块
-**目标：** 满足企业级 RBAC、多门店隔离、多角色协同。
+### 5. OTA Integration Skeleton | OTA 对接骨架
+- Channel adapter abstraction (Douyin / Meituan / Ctrip reserved).
+- Callback DTOs, signature verification skeleton.
+- Idempotency key and retry task model.
 
-#### 功能点
-- 用户登录（用户名/手机号/邮箱）
-- JWT 鉴权
-- 刷新令牌机制
-- 角色管理
-- 菜单权限
-- 按钮权限
-- 数据权限（集团 / 品牌 / 门店 / 仅本人）
-- 登录日志
-- 操作审计日志
-- 密码强度校验
-- 账号锁定 / 解锁
+- 渠道抽象层（预留抖音/美团/携程）。
+- 回调 DTO 与验签骨架。
+- 幂等键与失败重试任务模型。
 
-#### 技术建议
-- Spring Security + JWT
-- Redis 存储会话黑名单 / 短期验证码
-- MyBatis 维护权限表
+### 6. CRM, Finance, Operations | 客户会员、财务、运营
+- Customer/member profile, points, coupon base structures.
+- Receipt/refund/bill/invoice/report base APIs.
+- Housekeeping and maintenance work-order support.
+- Audit log and operation log center.
 
----
+- 客户会员、积分、优惠券基础结构。
+- 收退款、账单、发票、经营报表基础接口。
+- 保洁与维修工单。
+- 审计日志与操作日志中心。
 
-### 3.2 集团、品牌、门店管理模块
-**目标：** 支持连锁经营与多业态扩展。
+## Engineering Readiness | 工程化能力
+- React + TypeScript + Ant Design frontend.
+- Spring Boot + MyBatis + MySQL + Redis + RabbitMQ backend.
+- i18n frontend baseline: English default + Chinese switch.
+- CI workflow: backend test + frontend test/build.
+- Bilingual schema comments (Chinese/English) in SQL.
 
-#### 功能点
-- 集团创建、启停用
-- 品牌创建、品牌视觉配置
-- 门店创建
-- 门店经营模式切换（酒店 / 民宿）
-- 地址、坐标、营业时间、前台电话
-- 门店标签（景区店、商旅店、亲子店等）
-- 门店证照与资质管理
-- OTA 渠道授权信息管理
-- 门店时区、货币、语言扩展（国际化预留）
-
-#### 技术建议
-- 单独 property 模块
-- 为后续 Spring Cloud 拆分预留 property-service 边界
-
----
-
-### 3.3 房型、房间、设施模块
-**目标：** 兼容标准酒店与民宿的房源差异。
-
-#### 功能点
-- 房型管理：大床房、双床房、套房、整租民宿等
-- 房型基础配置：可住人数、床型、面积、窗型、早餐、吸烟规则
-- 房间管理：房号、楼栋、楼层、朝向、备注
-- 房间设施：空调、WiFi、洗衣机、厨房、投影等
-- 房间标签：宠物友好、可加床、可做饭
-- 房态管理：空房、预订、在住、脏房、维修、锁房
-- 房间图片、视频管理
-- 民宿模式下支持“整套 / 单间 / 床位”差异
-
----
-
-### 3.4 价格、库存与收益管理模块
-**目标：** 支撑动态定价与多渠道分发。
-
-#### 功能点
-- 基础价格配置
-- 按日期设置日历价
-- 按周末 / 节假日 / 活动设置特殊价
-- 连住优惠、提前预订优惠
-- 会员价、协议价、企业客户价
-- 库存配置
-- 房态占用规则
-- 超售规则
-- 渠道库存分配策略
-- 房型与渠道商品映射
-- 渠道推价、推库存、回写结果记录
-
-#### 技术建议
-- Redis 缓存热点房态
-- RabbitMQ 异步推送渠道消息
-- 引入幂等表与失败重试队列
-
----
-
-### 3.5 订单与预订模块
-**目标：** 支持直销、前台、OTA 三类订单来源。
-
-#### 功能点
-- 手工创建订单
-- 官网订单
-- 抖音 / 美团 / 携程 OTA 订单导入
-- 团体订单
-- 订单状态流转（待确认、已确认、已入住、已退房、已取消）
-- 改期
-- 续住
-- 换房
-- 升级房型
-- 订单拆分 / 合并
-- 担保订单、预授权订单
-- 入住人信息维护
-- 特殊要求记录
-- 取消规则与违约金
-
-#### 技术建议
-- order + reservation 分层
-- 使用事件驱动处理库存扣减、支付通知、渠道同步
-
----
-
-### 3.6 入住、退房与前台运营模块
-**目标：** 覆盖线下前台核心操作。
-
-#### 功能点
-- 预入住
-- 到店登记
-- 办理入住
-- 人证信息录入
-- 押金收取
-- 续住
-- 换房
-- 提前退房
-- 延迟退房
-- 结账
-- 发票申请
-- 赔付、补款、退款
-- 交接班
-- 前台营业报表
-
----
-
-### 3.7 客房、保洁、维修模块
-**目标：** 提升房态周转效率。
-
-#### 功能点
-- 清扫任务派发
-- 房间脏净状态切换
-- 保洁进度跟踪
-- 维修工单创建
-- 维修状态流转
-- 住中服务工单
-- 客诉工单
-- SLA 统计
-- 异常房态告警
-
----
-
-### 3.8 渠道对接模块（抖音 / 美团 / 携程）
-**目标：** 支持统一渠道中台。
-
-#### 功能点
-- 渠道账号授权管理
-- 渠道商品映射
-- 渠道房型映射
-- 渠道价格同步
-- 渠道库存同步
-- 渠道订单拉取 / 回调接收
-- 渠道退款状态同步
-- 回调日志
-- 幂等去重
-- 失败重试
-- 补偿任务
-- 人工重推
-
-#### 技术建议
-- integration 模块按平台拆分 adapter
-- 统一 ChannelAdapter 接口
-- 异步事件 + DLQ 死信队列
-
----
-
-### 3.9 会员与营销模块
-#### 功能点
-- 会员注册
-- 会员等级
-- 积分
-- 优惠券
-- 储值
-- 黑名单
-- 新客价 / 老客价
-- 抖音直播活动价
-- 渠道专享价
-- 转化漏斗分析
-
----
-
-### 3.10 财务与对账模块
-#### 功能点
-- 支付单
-- 收款记录
-- 退款记录
-- 发票记录
-- 渠道账单导入
-- 渠道对账
-- 差异单处理
-- 日结 / 月结
-- 门店营收报表
-- 集团财务总览
-
----
-
-### 3.11 数据分析与大屏模块
-#### 功能点
-- 入住率
-- 房态分布
-- 营收趋势
-- 渠道贡献占比
-- RevPAR / ADR
-- 会员增长
-- 热门门店排名
-- 投诉率 / 维修率
-
----
-
-## 四、推荐后端分层
-- controller: 接口层
-- service: 业务层
-- mapper: MyBatis 数据访问层
-- domain/entity: 持久化对象
-- domain/dto: 请求对象
-- domain/vo: 返回对象
-- common: 通用响应、异常、枚举、工具类
-- integration: 渠道对接适配层
-
----
-
-## 五、推荐数据库设计原则
-1. 所有核心表包含 `id, created_by, created_at, updated_by, updated_at, deleted`
-2. 所有 MySQL 注释双语
-3. 所有状态字段使用枚举码表
-4. 渠道同步增加幂等键
-5. 订单与支付分表，降低耦合
-6. 使用索引支持按门店、日期、状态高频查询
-
----
-
-## 六、贴合简历的亮点描述
-这套项目可以自然贴合你的简历表达：
-- 使用 Spring Boot + React + TypeScript 构建企业级全栈系统
-- 使用 Redis 提升房态与库存读取性能
-- 使用 RabbitMQ 实现订单、库存、渠道同步的事件驱动解耦
-- 使用 MyBatis 完成高频业务表查询与复杂报表统计
-- 采用模块化架构并预留 Spring Cloud 微服务演进空间
-
+- 前端：React + TS + AntD。
+- 后端：Spring Boot + MyBatis + MySQL + Redis + RabbitMQ。
+- 前端国际化：默认英文，可切中文。
+- CI：后端测试 + 前端测试构建。
+- SQL 注释保持中英双语。

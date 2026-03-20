@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'
 import { fetchOrderDetail, fetchOrderTimeline } from '../api/orderApi'
 import { dictText } from '../constants/businessDict'
 import { resolveTimelineLang, timelineText } from '../constants/roomTimelineI18n'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 export function OrderDetailPage() {
   const { id } = useParams()
@@ -80,7 +81,7 @@ export function OrderDetailPage() {
               <Table
                 rowKey="id"
                 dataSource={detail.guests || []}
-                pagination={false}
+                pagination={DEFAULT_TABLE_PAGINATION}
                 columns={[
                   { title: '姓名', dataIndex: 'guestName' },
                   { title: '手机号', dataIndex: 'guestMobile' },
@@ -106,7 +107,7 @@ export function OrderDetailPage() {
               <Table
                 rowKey="id"
                 dataSource={detail.stays || []}
-                pagination={false}
+                pagination={DEFAULT_TABLE_PAGINATION}
                 columns={[
                   { title: '入住单号', dataIndex: 'stayNo' },
                   { title: '房间号', dataIndex: 'roomNo' },
@@ -133,7 +134,7 @@ export function OrderDetailPage() {
               <Table
                 rowKey="id"
                 dataSource={detail.payments || []}
-                pagination={false}
+                pagination={DEFAULT_TABLE_PAGINATION}
                 columns={[
                   { title: '类型', dataIndex: 'paymentType', render: (value: string) => dictText.paymentType(value) },
                   { title: '方式', dataIndex: 'paymentMethod', render: (value: string) => dictText.paymentMethod(value) },
@@ -153,7 +154,7 @@ export function OrderDetailPage() {
                   <Table
                     rowKey="id"
                     dataSource={detail.auditLogs || []}
-                    pagination={false}
+                    pagination={DEFAULT_TABLE_PAGINATION}
                     columns={[
                       { title: '动作', dataIndex: 'actionType' },
                       { title: '内容', dataIndex: 'content' },
@@ -166,7 +167,7 @@ export function OrderDetailPage() {
                   <Table
                     rowKey="id"
                     dataSource={detail.operationLogs || []}
-                    pagination={false}
+                    pagination={DEFAULT_TABLE_PAGINATION}
                     columns={[
                       { title: '操作', dataIndex: 'operation' },
                       { title: '请求路径', dataIndex: 'requestUri' },
@@ -188,3 +189,7 @@ export function OrderDetailPage() {
     </div>
   )
 }
+
+
+
+

@@ -17,6 +17,7 @@ import com.kylan.hotel.mapper.HotelPropertyMapper;
 import com.kylan.hotel.mapper.HotelRoomMapper;
 import com.kylan.hotel.mapper.HotelRoomStatusLogMapper;
 import com.kylan.hotel.mapper.HotelRoomTypeMapper;
+import com.kylan.hotel.mapper.SysDictItemMapper;
 import com.kylan.hotel.service.RoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -33,6 +34,7 @@ public class RoomServiceImpl implements RoomService {
     private final HotelPropertyMapper hotelPropertyMapper;
     private final HotelRoomTypeMapper hotelRoomTypeMapper;
     private final HotelRoomStatusLogMapper hotelRoomStatusLogMapper;
+    private final SysDictItemMapper sysDictItemMapper;
 
     @Override
     public Long create(RoomCreateRequest request) {
@@ -57,9 +59,6 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public List<RoomVO> list() {
         List<RoomVO> list = hotelRoomMapper.findAll();
-        if (SecurityUtils.hasPermission("scope:all")) {
-            return list;
-        }
         List<Long> scopes = SecurityUtils.propertyScopes();
         return list.stream().filter(item -> scopes.contains(item.getPropertyId())).toList();
     }
@@ -85,7 +84,7 @@ public class RoomServiceImpl implements RoomService {
             throw new BusinessException("room not found");
         }
         SecurityUtils.assertPropertyAccessible(room.getPropertyId());
-        if (!RoomStatus.isAllowed(request.getStatus())) {
+        if (sysDictItemMapper.countEnabledByValue("ROOM_STATUS", request.getStatus()) <= 0) {
             throw new BusinessException("unsupported room status");
         }
         if (room.getStatus().equals(request.getStatus())) {

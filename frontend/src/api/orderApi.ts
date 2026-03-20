@@ -1,4 +1,4 @@
-﻿import { http } from './http'
+﻿import { buildApiUrl, http } from './http'
 
 export interface ReservationItem {
   id: number
@@ -148,5 +148,6 @@ export async function fetchPayments(): Promise<PaymentRecordItem[]> {
 }
 
 export function orderExportUrl() {
-  return 'http://localhost:8080/api/orders/export'
+  return buildApiUrl('/orders/export')
 }
+

@@ -1,9 +1,11 @@
 ﻿import { App, Button, Form, Input, Modal, Space, Switch, Table } from 'antd'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createGroup, fetchGroups, GroupCreatePayload, GroupItem, updateGroup, updateGroupStatus } from '../api/groupApi'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 export function GroupListPage() {
   const [data, setData] = useState<GroupItem[]>([])
+  const [keyword, setKeyword] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<GroupItem | null>(null)
   const [form] = Form.useForm<GroupCreatePayload>()
@@ -17,6 +19,19 @@ export function GroupListPage() {
   useEffect(() => {
     loadData()
   }, [])
+
+  const filteredData = useMemo(() => {
+    if (!keyword.trim()) {
+      return data
+    }
+    const text = keyword.toLowerCase()
+    return data.filter((item) => {
+      return (
+        String(item.groupCode || '').toLowerCase().includes(text)
+        || String(item.groupName || '').toLowerCase().includes(text)
+      )
+    })
+  }, [data, keyword])
 
   const handleAdd = () => {
     setEditing(null)
@@ -56,10 +71,18 @@ export function GroupListPage() {
         <Button type="primary" onClick={handleAdd}>
           新增集团
         </Button>
+        <Input.Search
+          allowClear
+          placeholder="搜索集团编码 / 集团名称"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          style={{ width: 300 }}
+        />
       </Space>
       <Table
         rowKey="id"
-        dataSource={data}
+        dataSource={filteredData}
+        pagination={DEFAULT_TABLE_PAGINATION}
         columns={[
           { title: '集团编码', dataIndex: 'groupCode' },
           { title: '集团名称', dataIndex: 'groupName' },

@@ -34,7 +34,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(restAuthenticationEntryPoint)
                         .accessDeniedHandler(restAccessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/ota/callback/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/test/**", "/api/simple-auth/**", "/api/health/**", "/api/simple/**", "/api/final-auth/**").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/final-auth/login", "/api/ota/callback/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/health/**", "/api/simple/**").permitAll()
                         .anyRequest().permitAll());
         return http.build();
     }

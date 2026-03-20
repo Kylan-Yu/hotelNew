@@ -1,17 +1,19 @@
 ﻿import { App, Button, Layout, Menu, Select, Space, Typography } from 'antd'
 import type { MenuProps } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { logout, switchProperty } from '../api/authApi'
-import { fetchProperties } from '../api/propertyApi'
+import { PropertyItem, fetchProperties, fetchPropertyScopeOptions } from '../api/propertyApi'
 import { clearAuth, setAuth } from '../features/auth/authSlice'
+import { languageOptions } from '../i18n'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 
 const { Header, Sider, Content } = Layout
 
 type RawMenuItem = {
   key: string
-  label: string
+  labelKey: string
   permission?: string
   children?: RawMenuItem[]
 }
@@ -19,96 +21,96 @@ type RawMenuItem = {
 const rawMenuItems: RawMenuItem[] = [
   {
     key: 'workbench',
-    label: '工作台',
+    labelKey: 'menu.workbench',
     children: [
-      { key: '/workbench/dashboard', label: '经营看板', permission: 'report:read' },
-      { key: '/workbench/today-checkin', label: '今日入住', permission: 'checkin:read' },
-      { key: '/workbench/today-checkout', label: '今日退房', permission: 'checkin:read' },
-      { key: '/workbench/todos', label: '待处理事项', permission: 'ops:read' },
+      { key: '/workbench/dashboard', labelKey: 'menu.dashboard', permission: 'report:read' },
+      { key: '/workbench/today-checkin', labelKey: 'menu.todayCheckin', permission: 'checkin:read' },
+      { key: '/workbench/today-checkout', labelKey: 'menu.todayCheckout', permission: 'checkin:read' },
+      { key: '/workbench/todos', labelKey: 'menu.todos', permission: 'ops:read' },
     ],
   },
   {
     key: 'assets',
-    label: '房源管理',
+    labelKey: 'menu.assets',
     children: [
-      { key: '/assets/homestays', label: '民宿管理', permission: 'property:read' },
-      { key: '/assets/room-types', label: '房型管理', permission: 'roomType:read' },
-      { key: '/assets/rooms', label: '房间管理', permission: 'room:read' },
-      { key: '/assets/room-status', label: '房态管理', permission: 'room:read' },
+      { key: '/assets/homestays', labelKey: 'menu.homestays', permission: 'property:read' },
+      { key: '/assets/room-types', labelKey: 'menu.roomTypes', permission: 'roomType:read' },
+      { key: '/assets/rooms', labelKey: 'menu.rooms', permission: 'room:read' },
+      { key: '/assets/room-status', labelKey: 'menu.roomStatus', permission: 'room:read' },
     ],
   },
   {
     key: 'orders',
-    label: '订单中心',
+    labelKey: 'menu.orders',
     children: [
-      { key: '/orders/reservations', label: '预订订单', permission: 'order:read' },
-      { key: '/orders/checkin', label: '入住登记', permission: 'checkin:read' },
-      { key: '/orders/inhouse', label: '在住管理', permission: 'checkin:read' },
-      { key: '/orders/checkout', label: '退房管理', permission: 'checkin:read' },
-      { key: '/orders/detail', label: '订单详情', permission: 'order:read' },
+      { key: '/orders/reservations', labelKey: 'menu.reservations', permission: 'order:read' },
+      { key: '/orders/checkin', labelKey: 'menu.checkin', permission: 'checkin:read' },
+      { key: '/orders/inhouse', labelKey: 'menu.inhouse', permission: 'checkin:read' },
+      { key: '/orders/checkout', labelKey: 'menu.checkout', permission: 'checkin:read' },
+      { key: '/orders/detail', labelKey: 'menu.orderDetail', permission: 'order:read' },
     ],
   },
   {
     key: 'pricing',
-    label: '价格与库存',
+    labelKey: 'menu.pricing',
     children: [
-      { key: '/pricing/calendar', label: '房价日历', permission: 'pricing:read' },
-      { key: '/pricing/plans', label: '价格计划', permission: 'pricing:read' },
-      { key: '/pricing/inventory', label: '可售库存', permission: 'inventory:read' },
-      { key: '/pricing/overbook-warning', label: '超售预警', permission: 'inventory:read' },
+      { key: '/pricing/calendar', labelKey: 'menu.calendar', permission: 'pricing:read' },
+      { key: '/pricing/plans', labelKey: 'menu.plans', permission: 'pricing:read' },
+      { key: '/pricing/inventory', labelKey: 'menu.inventory', permission: 'inventory:read' },
+      { key: '/pricing/overbook-warning', labelKey: 'menu.overbookWarning', permission: 'inventory:read' },
     ],
   },
   {
     key: 'channels',
-    label: '渠道管理',
+    labelKey: 'menu.channels',
     children: [
-      { key: '/channels/config', label: '渠道配置', permission: 'ota:read' },
-      { key: '/channels/mapping', label: '渠道映射', permission: 'ota:read' },
-      { key: '/channels/sync-logs', label: '同步记录', permission: 'ota:read' },
-      { key: '/channels/callback-logs', label: '回调记录', permission: 'ota:read' },
+      { key: '/channels/config', labelKey: 'menu.config', permission: 'ota:read' },
+      { key: '/channels/mapping', labelKey: 'menu.mapping', permission: 'ota:read' },
+      { key: '/channels/sync-logs', labelKey: 'menu.syncLogs', permission: 'ota:read' },
+      { key: '/channels/callback-logs', labelKey: 'menu.callbackLogs', permission: 'ota:read' },
     ],
   },
   {
     key: 'crm',
-    label: '客户与会员',
+    labelKey: 'menu.crm',
     children: [
-      { key: '/crm/customers', label: '客户档案', permission: 'member:read' },
-      { key: '/crm/members', label: '会员管理', permission: 'member:read' },
-      { key: '/crm/points', label: '积分管理', permission: 'member:read' },
-      { key: '/crm/coupons', label: '优惠券管理', permission: 'member:read' },
+      { key: '/crm/customers', labelKey: 'menu.customers', permission: 'member:read' },
+      { key: '/crm/members', labelKey: 'menu.members', permission: 'member:read' },
+      { key: '/crm/points', labelKey: 'menu.points', permission: 'member:read' },
+      { key: '/crm/coupons', labelKey: 'menu.coupons', permission: 'member:read' },
     ],
   },
   {
     key: 'finance',
-    label: '财务管理',
+    labelKey: 'menu.finance',
     children: [
-      { key: '/finance/receipts', label: '收款记录', permission: 'finance:read' },
-      { key: '/finance/refunds', label: '退款记录', permission: 'finance:read' },
-      { key: '/finance/bills', label: '账单明细', permission: 'finance:read' },
-      { key: '/finance/invoices', label: '发票管理', permission: 'finance:read' },
-      { key: '/finance/reports', label: '经营报表', permission: 'report:read' },
+      { key: '/finance/receipts', labelKey: 'menu.receipts', permission: 'finance:read' },
+      { key: '/finance/refunds', labelKey: 'menu.refunds', permission: 'finance:read' },
+      { key: '/finance/bills', labelKey: 'menu.bills', permission: 'finance:read' },
+      { key: '/finance/invoices', labelKey: 'menu.invoices', permission: 'finance:read' },
+      { key: '/finance/reports', labelKey: 'menu.reports', permission: 'report:read' },
     ],
   },
   {
     key: 'operations',
-    label: '运营管理',
+    labelKey: 'menu.operations',
     children: [
-      { key: '/operations/housekeeping', label: '保洁管理', permission: 'ops:read' },
-      { key: '/operations/maintenance', label: '维修工单', permission: 'ops:read' },
-      { key: '/operations/room-status-record', label: '房态记录', permission: 'room:read' },
-      { key: '/operations/log-center', label: '日志中心', permission: 'report:read' },
+      { key: '/operations/housekeeping', labelKey: 'menu.housekeeping', permission: 'ops:read' },
+      { key: '/operations/maintenance', labelKey: 'menu.maintenance', permission: 'ops:read' },
+      { key: '/operations/room-status-record', labelKey: 'menu.roomStatusRecord', permission: 'room:read' },
+      { key: '/operations/log-center', labelKey: 'menu.logCenter', permission: 'report:read' },
     ],
   },
   {
     key: 'system',
-    label: '系统管理',
+    labelKey: 'menu.system',
     children: [
-      { key: '/system/users', label: '用户管理', permission: 'sys:user:read' },
-      { key: '/system/roles', label: '角色管理', permission: 'sys:role:read' },
-      { key: '/system/permissions', label: '权限管理', permission: 'sys:permission:read' },
-      { key: '/system/menus', label: '菜单管理', permission: 'sys:menu:read' },
-      { key: '/system/dicts', label: '字典管理', permission: 'sys:dict:read' },
-      { key: '/system/params', label: '参数配置', permission: 'sys:param:read' },
+      { key: '/system/users', labelKey: 'menu.users', permission: 'sys:user:read' },
+      { key: '/system/roles', labelKey: 'menu.roles', permission: 'sys:role:read' },
+      { key: '/system/permissions', labelKey: 'menu.permissions', permission: 'sys:permission:read' },
+      { key: '/system/menus', labelKey: 'menu.menus', permission: 'sys:menu:read' },
+      { key: '/system/dicts', labelKey: 'menu.dicts', permission: 'sys:dict:read' },
+      { key: '/system/params', labelKey: 'menu.params', permission: 'sys:param:read' },
     ],
   },
 ]
@@ -123,7 +125,11 @@ function hasPermission(permissions: string[], permission?: string) {
   return permissions.includes(permission)
 }
 
-function toAntMenuItems(rawItems: RawMenuItem[], permissions: string[]): MenuProps['items'] {
+function toAntMenuItems(
+  rawItems: RawMenuItem[],
+  permissions: string[],
+  translate: (key: string) => string,
+): MenuProps['items'] {
   return rawItems
     .map((item) => {
       if (item.children && item.children.length > 0) {
@@ -133,14 +139,14 @@ function toAntMenuItems(rawItems: RawMenuItem[], permissions: string[]): MenuPro
         }
         return {
           key: item.key,
-          label: item.label,
-          children: children.map((child) => ({ key: child.key, label: child.label })),
+          label: translate(item.labelKey),
+          children: children.map((child) => ({ key: child.key, label: translate(child.labelKey) })),
         }
       }
       if (!hasPermission(permissions, item.permission)) {
         return null
       }
-      return { key: item.key, label: item.label }
+      return { key: item.key, label: translate(item.labelKey) }
     })
     .filter(Boolean) as MenuProps['items']
 }
@@ -172,31 +178,45 @@ function buildLeafParentMap(items: MenuProps['items'], parentKey?: string, map: 
 }
 
 export function MainLayout() {
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useAppDispatch()
   const auth = useAppSelector((state) => state.auth)
   const permissions = auth.permissions || []
   const { message } = App.useApp()
-  const [propertyMap, setPropertyMap] = useState<Record<number, string>>({})
+  const [propertyOptions, setPropertyOptions] = useState<PropertyItem[]>([])
 
   useEffect(() => {
-    const loadProperties = async () => {
+    const loadScopeProperties = async () => {
       try {
-        const list = await fetchProperties()
-        const map: Record<number, string> = {}
-        ;(list || []).forEach((item) => {
-          map[item.id] = item.propertyName
-        })
-        setPropertyMap(map)
+        const list = await fetchPropertyScopeOptions()
+        if (list && list.length > 0) {
+          setPropertyOptions(list)
+          return
+        }
+        const fallbackList = await fetchProperties()
+        setPropertyOptions((fallbackList || []).filter((item) => item.status === 1))
       } catch {
-        setPropertyMap({})
+        try {
+          const fallbackList = await fetchProperties()
+          setPropertyOptions((fallbackList || []).filter((item) => item.status === 1))
+        } catch {
+          setPropertyOptions([])
+        }
       }
     }
-    loadProperties()
+    loadScopeProperties()
+    const onPropertyOptionsUpdated = () => {
+      loadScopeProperties()
+    }
+    window.addEventListener('hms:property-options-updated', onPropertyOptionsUpdated)
+    return () => {
+      window.removeEventListener('hms:property-options-updated', onPropertyOptionsUpdated)
+    }
   }, [auth.accessToken])
 
-  const menuItems = useMemo(() => toAntMenuItems(rawMenuItems, permissions), [permissions])
+  const menuItems = useMemo(() => toAntMenuItems(rawMenuItems, permissions, t), [permissions, t, i18n.language])
   const leafKeys = useMemo(() => flattenMenuKeys(menuItems), [menuItems])
   const leafParentMap = useMemo(() => buildLeafParentMap(menuItems), [menuItems])
 
@@ -224,7 +244,7 @@ export function MainLayout() {
       // ignore network errors
     }
     dispatch(clearAuth())
-    message.success('已退出登录')
+    message.success(t('layout.logoutSuccess'))
     navigate('/login', { replace: true })
   }
 
@@ -242,9 +262,10 @@ export function MainLayout() {
           currentPropertyId: data.currentPropertyId,
         }),
       )
-      message.success('门店切换成功')
+      message.success(t('layout.switchPropertySuccess'))
+      window.dispatchEvent(new Event('hms:property-options-updated'))
     } catch {
-      message.error('门店切换失败')
+      message.error(t('layout.switchPropertyFailed'))
     }
   }
 
@@ -270,18 +291,23 @@ export function MainLayout() {
       <Layout className="hms-main">
         <Header className="hms-header">
           <Typography.Title level={5} style={{ margin: 0 }}>
-            民宿多店管理系统
+            {t('layout.systemTitle')}
           </Typography.Title>
           <Space>
-            <span>当前用户: {auth.nickname || auth.username || '-'}</span>
             <Select
-              style={{ width: 220 }}
-              placeholder="切换门店"
+              style={{ width: 130 }}
+              value={i18n.language === 'zh-CN' ? 'zh-CN' : 'en'}
+              options={languageOptions}
+              onChange={(lang) => i18n.changeLanguage(lang)}
+            />
+            <Select
+              style={{ width: 260 }}
+              placeholder={t('layout.switchPropertyPlaceholder')}
               value={auth.currentPropertyId}
-              options={(auth.propertyScopes || []).map((id) => ({ label: propertyMap[id] || `门店 ${id}`, value: id }))}
+              options={propertyOptions.map((item) => ({ label: `${item.propertyCode} - ${item.propertyName}`, value: item.id }))}
               onChange={handleSwitchProperty}
             />
-            <Button onClick={handleLogout}>退出</Button>
+            <Button onClick={handleLogout}>{t('layout.logout')}</Button>
           </Space>
         </Header>
         <Content className="hms-content">

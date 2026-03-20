@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { dictText } from '../constants/businessDict'
 import { PermissionButton } from '../components/PermissionButton'
+import { useDictOptions } from '../hooks/useDictOptions'
 import {
   adjustMemberPoint,
   createCampaign,
@@ -13,6 +14,7 @@ import {
   fetchMembers,
 } from '../api/memberApi'
 import { fetchProperties } from '../api/propertyApi'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 interface MemberPageProps {
   view: 'members' | 'points' | 'coupons'
@@ -24,6 +26,7 @@ export function MemberPage({ view }: MemberPageProps) {
   const [campaigns, setCampaigns] = useState<any[]>([])
   const [pointLedgers, setPointLedgers] = useState<any[]>([])
   const [properties, setProperties] = useState<any[]>([])
+  const [keyword, setKeyword] = useState('')
 
   const [memberOpen, setMemberOpen] = useState(false)
   const [couponOpen, setCouponOpen] = useState(false)
@@ -36,6 +39,7 @@ export function MemberPage({ view }: MemberPageProps) {
   const [pointForm] = Form.useForm<any>()
 
   const { message } = App.useApp()
+  const { options: genderOptions, labelMap: genderLabelMap } = useDictOptions('GENDER')
 
   const loadData = async () => {
     const [m, c, cp, pl, ps] = await Promise.all([
@@ -62,6 +66,17 @@ export function MemberPage({ view }: MemberPageProps) {
     return '优惠券管理'
   }, [view])
 
+  const keywordText = keyword.trim().toLowerCase()
+  const matchKeyword = (item: any) => {
+    if (!keywordText) return true
+    return JSON.stringify(item).toLowerCase().includes(keywordText)
+  }
+
+  const filteredMembers = useMemo(() => members.filter(matchKeyword), [members, keywordText])
+  const filteredPointLedgers = useMemo(() => pointLedgers.filter(matchKeyword), [pointLedgers, keywordText])
+  const filteredCoupons = useMemo(() => coupons.filter(matchKeyword), [coupons, keywordText])
+  const filteredCampaigns = useMemo(() => campaigns.filter(matchKeyword), [campaigns, keywordText])
+
   return (
     <div>
       <Typography.Title level={4} style={{ marginTop: 0 }}>
@@ -69,6 +84,13 @@ export function MemberPage({ view }: MemberPageProps) {
       </Typography.Title>
 
       <Space style={{ marginBottom: 16 }} wrap>
+        <Input.Search
+          allowClear
+          style={{ width: 320 }}
+          placeholder="模糊搜索（会员/手机号/券编码/活动名称）"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
         {view === 'members' && (
           <PermissionButton permission="member:write" type="primary" onClick={() => setMemberOpen(true)}>
             新建会员
@@ -94,10 +116,12 @@ export function MemberPage({ view }: MemberPageProps) {
       {view === 'members' && (
         <Table
           rowKey="id"
-          dataSource={members}
+          dataSource={filteredMembers}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '会员编号', dataIndex: 'memberNo', width: 150 },
             { title: '姓名', dataIndex: 'memberName', width: 120 },
+            { title: '性别', dataIndex: 'gender', width: 120, render: (value: string) => genderLabelMap[value] || value || '-' },
             { title: '手机号', dataIndex: 'mobile', width: 140 },
             { title: '等级', dataIndex: 'levelCode', width: 90 },
             { title: '积分', dataIndex: 'pointBalance', width: 100 },
@@ -110,7 +134,8 @@ export function MemberPage({ view }: MemberPageProps) {
       {view === 'points' && (
         <Table
           rowKey="id"
-          dataSource={pointLedgers}
+          dataSource={filteredPointLedgers}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '流水ID', dataIndex: 'id', width: 90 },
             { title: '会员ID', dataIndex: 'memberId', width: 100 },
@@ -132,7 +157,8 @@ export function MemberPage({ view }: MemberPageProps) {
               children: (
                 <Table
                   rowKey="id"
-                  dataSource={coupons}
+                  dataSource={filteredCoupons}
+                  pagination={DEFAULT_TABLE_PAGINATION}
                   columns={[
                     { title: '券编码', dataIndex: 'couponCode', width: 140 },
                     { title: '券名称', dataIndex: 'couponName', width: 180 },
@@ -150,7 +176,8 @@ export function MemberPage({ view }: MemberPageProps) {
               children: (
                 <Table
                   rowKey="id"
-                  dataSource={campaigns}
+                  dataSource={filteredCampaigns}
+                  pagination={DEFAULT_TABLE_PAGINATION}
                   columns={[
                     { title: '活动编码', dataIndex: 'campaignCode', width: 150 },
                     { title: '活动名称', dataIndex: 'campaignName', width: 180 },
@@ -180,12 +207,15 @@ export function MemberPage({ view }: MemberPageProps) {
         }}
         onCancel={() => setMemberOpen(false)}
       >
-        <Form form={memberForm} layout="vertical" initialValues={{ levelCode: 1 }}>
+        <Form form={memberForm} layout="vertical" initialValues={{ levelCode: 1, gender: 'UNKNOWN' }}>
           <Form.Item name="propertyId" label="归属民宿" rules={[{ required: true }]}>
             <Select options={properties.map((item) => ({ label: item.propertyName, value: item.id }))} />
           </Form.Item>
           <Form.Item name="memberName" label="会员姓名" rules={[{ required: true }]}>
             <Input />
+          </Form.Item>
+          <Form.Item name="gender" label="性别">
+            <Select options={genderOptions} />
           </Form.Item>
           <Form.Item name="mobile" label="手机号" rules={[{ required: true }]}>
             <Input />
@@ -297,3 +327,9 @@ export function MemberPage({ view }: MemberPageProps) {
     </div>
   )
 }
+
+
+
+
+
+

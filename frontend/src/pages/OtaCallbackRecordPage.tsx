@@ -1,13 +1,15 @@
-﻿import { Card, Select, Space, Table, Tag } from 'antd'
+﻿import { Card, Input, Select, Space, Table, Tag } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
-import { dictText } from '../constants/businessDict'
 import { fetchOtaCallbackLogs } from '../api/otaApi'
+import { dictText } from '../constants/businessDict'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 export function OtaCallbackRecordPage() {
   const [data, setData] = useState<any[]>([])
   const [channelCode, setChannelCode] = useState<string | undefined>()
   const [eventType, setEventType] = useState<string | undefined>()
   const [status, setStatus] = useState<string | undefined>()
+  const [keyword, setKeyword] = useState('')
 
   useEffect(() => {
     const load = async () => {
@@ -18,13 +20,15 @@ export function OtaCallbackRecordPage() {
   }, [])
 
   const filteredData = useMemo(() => {
+    const text = keyword.trim().toLowerCase()
     return data.filter((item) => {
       if (channelCode && item.channelCode !== channelCode) return false
       if (eventType && item.eventType !== eventType) return false
       if (status && item.callbackStatus !== status) return false
+      if (text && !JSON.stringify(item).toLowerCase().includes(text)) return false
       return true
     })
-  }, [data, channelCode, eventType, status])
+  }, [data, channelCode, eventType, status, keyword])
 
   return (
     <Card title="渠道回调记录">
@@ -66,11 +70,19 @@ export function OtaCallbackRecordPage() {
           ]}
           onChange={setStatus}
         />
+        <Input.Search
+          allowClear
+          style={{ width: 280 }}
+          placeholder="模糊搜索（外部流水号/消息）"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
       </Space>
 
       <Table
         rowKey="id"
         dataSource={filteredData}
+        pagination={DEFAULT_TABLE_PAGINATION}
         columns={[
           { title: 'ID', dataIndex: 'id', width: 80 },
           { title: '渠道', dataIndex: 'channelCode', width: 120, render: (value: string) => dictText.channelCode(value) },

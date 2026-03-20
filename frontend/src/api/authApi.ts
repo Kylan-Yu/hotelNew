@@ -32,26 +32,8 @@ function unwrapData<T>(payload: any): T | null {
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResult> {
-  const tryAuthLogin = async () => {
-    const res = await http.post('/auth/login', payload)
-    return unwrapData<LoginResult>(res.data)
-  }
-
-  const tryFinalAuthLogin = async () => {
-    const res = await http.post('/final-auth/login', payload)
-    return unwrapData<LoginResult>(res.data)
-  }
-
-  let data: LoginResult | null = null
-  try {
-    data = await tryAuthLogin()
-  } catch {
-    data = null
-  }
-
-  if (!data || !data.accessToken) {
-    data = await tryFinalAuthLogin()
-  }
+  const res = await http.post('/auth/login', payload)
+  const data = unwrapData<LoginResult>(res.data)
 
   if (!data || !data.accessToken) {
     throw new Error('login response invalid')

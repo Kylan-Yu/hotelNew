@@ -125,8 +125,8 @@ public class OtaChannelServiceImpl implements OtaChannelService {
     }
 
     private boolean canAccessProperty(Long propertyId) {
-        if (SecurityUtils.hasPermission("scope:all")) {
-            return true;
+        if (propertyId == null) {
+            return false;
         }
         return SecurityUtils.propertyScopes().contains(propertyId);
     }

@@ -32,6 +32,12 @@ public class PropertyController {
         return ApiResponse.success(propertyService.list());
     }
 
+    @GetMapping("/scope-options")
+    @PreAuthorize("hasAuthority('property:read')")
+    public ApiResponse<List<PropertyVO>> listScopeOptions() {
+        return ApiResponse.success(propertyService.listScopeOptions());
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('property:write')")
     public ApiResponse<Void> update(@PathVariable("id") Long id, @Valid @RequestBody PropertyUpdateRequest request) {

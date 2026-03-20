@@ -16,6 +16,7 @@ import { fetchPayments } from '../api/orderApi'
 import { fetchProperties } from '../api/propertyApi'
 import { dictText } from '../constants/businessDict'
 import { PermissionButton } from '../components/PermissionButton'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 interface FinanceOpsPageProps {
   view: 'receipts' | 'refunds' | 'bills' | 'invoices' | 'reports'
@@ -30,6 +31,7 @@ export function FinanceOpsPage({ view }: FinanceOpsPageProps) {
   const [propertyStats, setPropertyStats] = useState<any[]>([])
   const [properties, setProperties] = useState<any[]>([])
 
+  const [keyword, setKeyword] = useState('')
   const [filterPropertyId, setFilterPropertyId] = useState<number | undefined>()
 
   const [refundOpen, setRefundOpen] = useState(false)
@@ -86,35 +88,55 @@ export function FinanceOpsPage({ view }: FinanceOpsPageProps) {
     return propertyNameById[propertyId] || `民宿${propertyId}`
   }
 
+  const keywordText = keyword.trim().toLowerCase()
+  const matchKeyword = (item: any) => {
+    if (!keywordText) {
+      return true
+    }
+    return JSON.stringify(item).toLowerCase().includes(keywordText)
+  }
+
   const filteredPayments = useMemo(() => {
-    if (!filterPropertyId) return payments
-    return payments.filter((item) => item.propertyId === filterPropertyId)
-  }, [payments, filterPropertyId])
+    return payments.filter((item) => {
+      if (filterPropertyId && item.propertyId !== filterPropertyId) return false
+      return matchKeyword(item)
+    })
+  }, [payments, filterPropertyId, keywordText])
 
   const filteredRefunds = useMemo(() => {
-    if (!filterPropertyId) return refunds
-    return refunds.filter((item) => item.propertyId === filterPropertyId)
-  }, [refunds, filterPropertyId])
+    return refunds.filter((item) => {
+      if (filterPropertyId && item.propertyId !== filterPropertyId) return false
+      return matchKeyword(item)
+    })
+  }, [refunds, filterPropertyId, keywordText])
 
   const filteredBills = useMemo(() => {
-    if (!filterPropertyId) return bills
-    return bills.filter((item) => item.propertyId === filterPropertyId)
-  }, [bills, filterPropertyId])
+    return bills.filter((item) => {
+      if (filterPropertyId && item.propertyId !== filterPropertyId) return false
+      return matchKeyword(item)
+    })
+  }, [bills, filterPropertyId, keywordText])
 
   const filteredInvoices = useMemo(() => {
-    if (!filterPropertyId) return invoices
-    return invoices.filter((item) => item.propertyId === filterPropertyId)
-  }, [invoices, filterPropertyId])
+    return invoices.filter((item) => {
+      if (filterPropertyId && item.propertyId !== filterPropertyId) return false
+      return matchKeyword(item)
+    })
+  }, [invoices, filterPropertyId, keywordText])
 
   const filteredDailyReports = useMemo(() => {
-    if (!filterPropertyId) return dailyReports
-    return dailyReports.filter((item) => item.propertyId === filterPropertyId)
-  }, [dailyReports, filterPropertyId])
+    return dailyReports.filter((item) => {
+      if (filterPropertyId && item.propertyId !== filterPropertyId) return false
+      return matchKeyword(item)
+    })
+  }, [dailyReports, filterPropertyId, keywordText])
 
   const filteredPropertyStats = useMemo(() => {
-    if (!filterPropertyId) return propertyStats
-    return propertyStats.filter((item) => item.propertyId === filterPropertyId)
-  }, [propertyStats, filterPropertyId])
+    return propertyStats.filter((item) => {
+      if (filterPropertyId && item.propertyId !== filterPropertyId) return false
+      return matchKeyword(item)
+    })
+  }, [propertyStats, filterPropertyId, keywordText])
 
   const download = async (url: string, filename: string) => {
     const token = localStorage.getItem('hms_access_token')
@@ -144,6 +166,13 @@ export function FinanceOpsPage({ view }: FinanceOpsPageProps) {
           value={filterPropertyId}
           options={properties.map((item) => ({ label: item.propertyName, value: item.id }))}
           onChange={setFilterPropertyId}
+        />
+        <Input.Search
+          allowClear
+          style={{ width: 320 }}
+          placeholder="模糊搜索（订单号/手机号/备注等）"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
         />
         {view === 'refunds' && (
           <PermissionButton permission="finance:write" type="primary" onClick={() => setRefundOpen(true)}>
@@ -176,6 +205,7 @@ export function FinanceOpsPage({ view }: FinanceOpsPageProps) {
         <Table
           rowKey="id"
           dataSource={filteredPayments}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '流水ID', dataIndex: 'id', width: 90 },
             { title: '民宿', dataIndex: 'propertyId', width: 140, render: (value: number) => getPropertyName(value) },
@@ -194,6 +224,7 @@ export function FinanceOpsPage({ view }: FinanceOpsPageProps) {
         <Table
           rowKey="id"
           dataSource={filteredRefunds}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '退款单ID', dataIndex: 'id', width: 100 },
             { title: '民宿', dataIndex: 'propertyId', width: 140, render: (value: number) => getPropertyName(value) },
@@ -211,6 +242,7 @@ export function FinanceOpsPage({ view }: FinanceOpsPageProps) {
         <Table
           rowKey="id"
           dataSource={filteredBills}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '账单ID', dataIndex: 'id', width: 90 },
             { title: '民宿', dataIndex: 'propertyId', width: 140, render: (value: number) => getPropertyName(value) },
@@ -227,6 +259,7 @@ export function FinanceOpsPage({ view }: FinanceOpsPageProps) {
         <Table
           rowKey="id"
           dataSource={filteredInvoices}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '发票ID', dataIndex: 'id', width: 90 },
             { title: '订单ID', dataIndex: 'orderId', width: 100 },
@@ -246,6 +279,7 @@ export function FinanceOpsPage({ view }: FinanceOpsPageProps) {
           <Table
             rowKey="propertyId"
             dataSource={filteredDailyReports}
+            pagination={DEFAULT_TABLE_PAGINATION}
             style={{ marginBottom: 16 }}
             columns={[
               { title: '民宿', dataIndex: 'propertyName' },
@@ -258,6 +292,7 @@ export function FinanceOpsPage({ view }: FinanceOpsPageProps) {
           <Table
             rowKey="propertyId"
             dataSource={filteredPropertyStats}
+            pagination={DEFAULT_TABLE_PAGINATION}
             columns={[
               { title: '民宿', dataIndex: 'propertyName' },
               { title: '房间总数', dataIndex: 'roomCount' },

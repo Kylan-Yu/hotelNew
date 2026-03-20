@@ -45,6 +45,11 @@ export async function fetchProperties(): Promise<PropertyItem[]> {
   return res.data.data
 }
 
+export async function fetchPropertyScopeOptions(): Promise<PropertyItem[]> {
+  const res = await http.get('/properties/scope-options')
+  return res.data.data
+}
+
 export async function createProperty(payload: PropertyCreatePayload): Promise<number> {
   const res = await http.post('/properties', payload)
   return res.data.data

@@ -11,5 +11,9 @@ public class SystemDictCreateRequest {
     @NotBlank(message = "dictName is required")
     private String dictName;
 
+    private Integer status;
+
+    private Integer sortNo;
+
     private String remark;
 }

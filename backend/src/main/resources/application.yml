@@ -2,29 +2,31 @@ spring:
   application:
     name: hotel-management-backend
   datasource:
-    url: jdbc:mysql://192.168.15.100:3306/hotel_management?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-    username: root
-    password: shice2022mysql
+    url: ${DB_URL:jdbc:mysql://localhost:3306/hotel_management?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
-      host: 192.168.15.100
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
   rabbitmq:
-    host: 192.168.15.100
-    port: 5672
-    username: root
-    password: 123456
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
 
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 security:
   jwt:
-    secret: replace-this-with-a-strong-256-bit-secret-key-1234567890
-    access-token-expire-seconds: 7200
-    refresh-token-expire-seconds: 604800
+    secret: ${JWT_SECRET:replace-with-a-strong-256-bit-secret-key-at-least-32-bytes}
+    access-token-expire-seconds: ${JWT_ACCESS_EXPIRE_SECONDS:7200}
+    refresh-token-expire-seconds: ${JWT_REFRESH_EXPIRE_SECONDS:604800}

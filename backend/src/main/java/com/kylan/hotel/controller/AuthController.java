@@ -1,8 +1,8 @@
-package com.kylan.hotel.controller;
+﻿package com.kylan.hotel.controller;
 
 import com.kylan.hotel.common.ApiResponse;
-import com.kylan.hotel.domain.dto.LogoutRequest;
 import com.kylan.hotel.domain.dto.LoginRequest;
+import com.kylan.hotel.domain.dto.LogoutRequest;
 import com.kylan.hotel.domain.dto.RefreshTokenRequest;
 import com.kylan.hotel.domain.dto.SwitchPropertyRequest;
 import com.kylan.hotel.domain.vo.CurrentUserVO;
@@ -15,12 +15,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestHeader;
-
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -28,31 +25,6 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
-
-    @PostMapping("/test-login")
-    public ApiResponse<LoginResponse> testLogin(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
-        String password = request.get("password");
-        
-        // 完全硬编码验证，不依赖任何数据库或服务
-        if ("admin".equals(username) && "Admin@123".equals(password)) {
-            LoginResponse response = LoginResponse.builder()
-                    .accessToken("hardcoded-token-" + System.currentTimeMillis())
-                    .refreshToken("hardcoded-refresh-" + System.currentTimeMillis())
-                    .tokenType("Bearer")
-                    .expiresIn(Long.valueOf(7200))
-                    .userId(1L)
-                    .username(username)
-                    .nickname("System Admin")
-                    .permissions(List.of("*"))
-                    .propertyScopes(List.of())
-                    .currentPropertyId(null)
-                    .build();
-            return ApiResponse.success(response);
-        } else {
-            return ApiResponse.failure(401, "Invalid credentials");
-        }
-    }
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {

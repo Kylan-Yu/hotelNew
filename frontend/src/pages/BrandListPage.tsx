@@ -1,11 +1,13 @@
 ﻿import { App, Button, Form, Input, Modal, Select, Space, Switch, Table } from 'antd'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { BrandCreatePayload, BrandItem, createBrand, fetchBrands, updateBrand, updateBrandStatus } from '../api/brandApi'
 import { GroupItem, fetchGroups } from '../api/groupApi'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 export function BrandListPage() {
   const [data, setData] = useState<BrandItem[]>([])
   const [groups, setGroups] = useState<GroupItem[]>([])
+  const [keyword, setKeyword] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<BrandItem | null>(null)
   const [form] = Form.useForm<BrandCreatePayload>()
@@ -20,6 +22,20 @@ export function BrandListPage() {
   useEffect(() => {
     loadData()
   }, [])
+
+  const filteredData = useMemo(() => {
+    if (!keyword.trim()) {
+      return data
+    }
+    const text = keyword.toLowerCase()
+    return data.filter((item) => {
+      return (
+        String(item.brandCode || '').toLowerCase().includes(text)
+        || String(item.brandName || '').toLowerCase().includes(text)
+        || String(item.groupName || '').toLowerCase().includes(text)
+      )
+    })
+  }, [data, keyword])
 
   const handleAdd = () => {
     setEditing(null)
@@ -63,10 +79,18 @@ export function BrandListPage() {
         <Button type="primary" onClick={handleAdd}>
           新增品牌
         </Button>
+        <Input.Search
+          allowClear
+          placeholder="搜索品牌编码 / 品牌名称 / 集团名称"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          style={{ width: 320 }}
+        />
       </Space>
       <Table
         rowKey="id"
-        dataSource={data}
+        dataSource={filteredData}
+        pagination={DEFAULT_TABLE_PAGINATION}
         columns={[
           { title: '品牌编码', dataIndex: 'brandCode' },
           { title: '品牌名称', dataIndex: 'brandName' },
@@ -94,17 +118,17 @@ export function BrandListPage() {
         destroyOnClose
       >
         <Form layout="vertical" form={form}>
-          <Form.Item name="groupId" label="所属集团" rules={[{ required: true }]}> 
+          <Form.Item name="groupId" label="所属集团" rules={[{ required: true }]}>
             <Select
               options={groups.map((g) => ({ label: `${g.groupCode} - ${g.groupName}`, value: g.id }))}
               showSearch
               optionFilterProp="label"
             />
           </Form.Item>
-          <Form.Item name="brandCode" label="品牌编码" rules={[{ required: true }]}> 
+          <Form.Item name="brandCode" label="品牌编码" rules={[{ required: true }]}>
             <Input disabled={!!editing} />
           </Form.Item>
-          <Form.Item name="brandName" label="品牌名称" rules={[{ required: true }]}> 
+          <Form.Item name="brandName" label="品牌名称" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
         </Form>

@@ -26,6 +26,7 @@ public class MemberMarketingServiceImpl implements MemberMarketingService {
     private final CouponTemplateMapper couponTemplateMapper;
     private final MemberPreferenceMapper memberPreferenceMapper;
     private final MarketingCampaignMapper marketingCampaignMapper;
+    private final SysDictItemMapper sysDictItemMapper;
 
     @Override
     public Long createMember(MemberCreateRequest request) {
@@ -35,6 +36,14 @@ public class MemberMarketingServiceImpl implements MemberMarketingService {
         member.setMemberNo("M" + System.currentTimeMillis());
         member.setMemberName(request.getMemberName());
         member.setMobile(request.getMobile());
+        String gender = request.getGender();
+        if (gender == null || gender.isBlank()) {
+            gender = "UNKNOWN";
+        }
+        if (sysDictItemMapper.countEnabledByValue("GENDER", gender) <= 0) {
+            throw new BusinessException("unsupported gender");
+        }
+        member.setGender(gender);
         member.setLevelCode(request.getLevelCode() == null ? 1 : request.getLevelCode());
         member.setPointBalance(0);
         member.setStatus("ACTIVE");
@@ -155,8 +164,8 @@ public class MemberMarketingServiceImpl implements MemberMarketingService {
     }
 
     private boolean canAccessProperty(Long propertyId) {
-        if (SecurityUtils.hasPermission("scope:all")) {
-            return true;
+        if (propertyId == null) {
+            return false;
         }
         return SecurityUtils.propertyScopes().contains(propertyId);
     }

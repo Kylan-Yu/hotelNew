@@ -32,7 +32,13 @@ public final class SecurityUtils {
     }
 
     public static List<Long> propertyScopes() {
-        return currentPrincipal().getPropertyScopes() == null ? List.of() : currentPrincipal().getPropertyScopes();
+        UserPrincipal principal = currentPrincipal();
+        Long currentPropertyId = principal.getCurrentPropertyId();
+        if (currentPropertyId != null) {
+            return List.of(currentPropertyId);
+        }
+        List<Long> scopes = principal.getPropertyScopes();
+        return scopes == null ? List.of() : scopes;
     }
 
     public static boolean hasPermission(String permission) {
@@ -42,9 +48,6 @@ public final class SecurityUtils {
 
     public static void assertPropertyAccessible(Long propertyId) {
         if (propertyId == null) {
-            return;
-        }
-        if (hasPermission("scope:all")) {
             return;
         }
         List<Long> scopes = propertyScopes();

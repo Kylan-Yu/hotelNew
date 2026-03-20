@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PermissionButton } from '../components/PermissionButton'
 import { dictText } from '../constants/businessDict'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 import {
   cancelOrder,
   changeRoom,
@@ -46,6 +47,9 @@ export function OrderPage({ view }: OrderPageProps) {
   const [properties, setProperties] = useState<any[]>([])
   const [roomTypes, setRoomTypes] = useState<any[]>([])
   const [rooms, setRooms] = useState<any[]>([])
+  const [reservationKeyword, setReservationKeyword] = useState('')
+  const [reservationPropertyId, setReservationPropertyId] = useState<number | undefined>()
+  const [reservationRoomTypeId, setReservationRoomTypeId] = useState<number | undefined>()
 
   const [reservationOpen, setReservationOpen] = useState(false)
   const [checkInOpen, setCheckInOpen] = useState(false)
@@ -105,6 +109,30 @@ export function OrderPage({ view }: OrderPageProps) {
     return stays
   }, [stays, view])
 
+  const filteredReservations = useMemo(() => {
+    const keyword = reservationKeyword.trim().toLowerCase()
+    return reservations.filter((item) => {
+      if (reservationPropertyId && item.propertyId !== reservationPropertyId) {
+        return false
+      }
+      if (reservationRoomTypeId && item.roomTypeId !== reservationRoomTypeId) {
+        return false
+      }
+      if (
+        keyword &&
+        !(
+          String(item.propertyName || '').toLowerCase().includes(keyword) ||
+          String(item.roomTypeName || '').toLowerCase().includes(keyword) ||
+          String(item.contactMobile || '').toLowerCase().includes(keyword) ||
+          String(item.contactName || '').toLowerCase().includes(keyword)
+        )
+      ) {
+        return false
+      }
+      return true
+    })
+  }, [reservationKeyword, reservationPropertyId, reservationRoomTypeId, reservations])
+
   const viewTitle = useMemo(() => {
     if (view === 'reservations') return '预订订单'
     if (view === 'checkin') return '入住登记'
@@ -158,6 +186,33 @@ export function OrderPage({ view }: OrderPageProps) {
             新建预订
           </PermissionButton>
         )}
+        {view === 'reservations' && (
+          <>
+            <Input
+              allowClear
+              placeholder="搜索民宿 / 房型 / 电话 / 联系人"
+              style={{ width: 320 }}
+              value={reservationKeyword}
+              onChange={(event) => setReservationKeyword(event.target.value)}
+            />
+            <Select
+              allowClear
+              placeholder="筛选民宿"
+              style={{ width: 180 }}
+              value={reservationPropertyId}
+              onChange={(value) => setReservationPropertyId(value)}
+              options={properties.map((item) => ({ label: item.propertyName, value: item.id }))}
+            />
+            <Select
+              allowClear
+              placeholder="筛选房型"
+              style={{ width: 180 }}
+              value={reservationRoomTypeId}
+              onChange={(value) => setReservationRoomTypeId(value)}
+              options={roomTypes.map((item) => ({ label: item.roomTypeName, value: item.id }))}
+            />
+          </>
+        )}
         <PermissionButton permission="order:export" onClick={downloadOrders}>
           导出订单
         </PermissionButton>
@@ -166,7 +221,8 @@ export function OrderPage({ view }: OrderPageProps) {
       {view === 'reservations' && (
         <Table
           rowKey="id"
-          dataSource={reservations}
+          dataSource={filteredReservations}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '预订号', dataIndex: 'reservationNo', width: 170 },
             { title: '民宿', dataIndex: 'propertyName', width: 160 },
@@ -206,6 +262,7 @@ export function OrderPage({ view }: OrderPageProps) {
         <Table
           rowKey="id"
           dataSource={filteredOrders}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '订单号', dataIndex: 'orderNo', width: 170 },
             { title: '民宿', dataIndex: 'propertyName', width: 150 },
@@ -252,6 +309,7 @@ export function OrderPage({ view }: OrderPageProps) {
         <Table
           rowKey="id"
           dataSource={filteredStays}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '入住单号', dataIndex: 'stayNo', width: 170 },
             { title: '订单号', dataIndex: 'orderNo', width: 170 },
@@ -330,6 +388,7 @@ export function OrderPage({ view }: OrderPageProps) {
         <Table
           rowKey="id"
           dataSource={filteredStays}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '入住单号', dataIndex: 'stayNo', width: 170 },
             { title: '订单号', dataIndex: 'orderNo', width: 170 },

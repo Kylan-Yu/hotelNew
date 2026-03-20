@@ -12,6 +12,7 @@ import {
 import { fetchProperties } from '../api/propertyApi'
 import { fetchRooms } from '../api/roomApi'
 import { PermissionButton } from '../components/PermissionButton'
+import { DEFAULT_TABLE_PAGINATION } from '../constants/tablePagination'
 
 interface OperationsPageProps {
   view: 'housekeeping' | 'maintenance'
@@ -22,6 +23,7 @@ export function OperationsPage({ view }: OperationsPageProps) {
   const [maintenanceTickets, setMaintenanceTickets] = useState<any[]>([])
   const [properties, setProperties] = useState<any[]>([])
   const [rooms, setRooms] = useState<any[]>([])
+  const [keyword, setKeyword] = useState('')
 
   const [filterPropertyId, setFilterPropertyId] = useState<number | undefined>()
 
@@ -72,14 +74,20 @@ export function OperationsPage({ view }: OperationsPageProps) {
   }, [rooms])
 
   const filteredHousekeeping = useMemo(() => {
-    if (!filterPropertyId) return housekeepingTasks
-    return housekeepingTasks.filter((item) => item.propertyId === filterPropertyId)
-  }, [housekeepingTasks, filterPropertyId])
+    return housekeepingTasks.filter((item) => {
+      if (filterPropertyId && item.propertyId !== filterPropertyId) return false
+      if (keyword.trim() && !JSON.stringify(item).toLowerCase().includes(keyword.trim().toLowerCase())) return false
+      return true
+    })
+  }, [housekeepingTasks, filterPropertyId, keyword])
 
   const filteredMaintenance = useMemo(() => {
-    if (!filterPropertyId) return maintenanceTickets
-    return maintenanceTickets.filter((item) => item.propertyId === filterPropertyId)
-  }, [maintenanceTickets, filterPropertyId])
+    return maintenanceTickets.filter((item) => {
+      if (filterPropertyId && item.propertyId !== filterPropertyId) return false
+      if (keyword.trim() && !JSON.stringify(item).toLowerCase().includes(keyword.trim().toLowerCase())) return false
+      return true
+    })
+  }, [maintenanceTickets, filterPropertyId, keyword])
 
   const openStatusModal = (row: any) => {
     setCurrentRow(row)
@@ -105,6 +113,13 @@ export function OperationsPage({ view }: OperationsPageProps) {
           options={properties.map((item) => ({ label: item.propertyName, value: item.id }))}
           onChange={setFilterPropertyId}
         />
+        <Input.Search
+          allowClear
+          style={{ width: 300 }}
+          placeholder="模糊搜索（房间/负责人/问题）"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
         <PermissionButton permission="ops:write" type="primary" onClick={() => setCreateOpen(true)}>
           {view === 'housekeeping' ? '新建保洁任务' : '新建维修工单'}
         </PermissionButton>
@@ -114,6 +129,7 @@ export function OperationsPage({ view }: OperationsPageProps) {
         <Table
           rowKey="id"
           dataSource={filteredHousekeeping}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '任务ID', dataIndex: 'id', width: 90 },
             { title: '民宿', dataIndex: 'propertyId', width: 160, render: (value: number) => propertyNameById[value] || `民宿${value}` },
@@ -139,6 +155,7 @@ export function OperationsPage({ view }: OperationsPageProps) {
         <Table
           rowKey="id"
           dataSource={filteredMaintenance}
+          pagination={DEFAULT_TABLE_PAGINATION}
           columns={[
             { title: '工单ID', dataIndex: 'id', width: 90 },
             { title: '民宿', dataIndex: 'propertyId', width: 160, render: (value: number) => propertyNameById[value] || `民宿${value}` },

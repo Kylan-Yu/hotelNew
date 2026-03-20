@@ -12,6 +12,7 @@ import com.kylan.hotel.domain.vo.PropertyVO;
 import com.kylan.hotel.mapper.HotelBrandMapper;
 import com.kylan.hotel.mapper.HotelGroupMapper;
 import com.kylan.hotel.mapper.HotelPropertyMapper;
+import com.kylan.hotel.mapper.SysDictItemMapper;
 import com.kylan.hotel.service.PropertyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -27,10 +28,12 @@ public class PropertyServiceImpl implements PropertyService {
     private final HotelGroupMapper hotelGroupMapper;
     private final HotelBrandMapper hotelBrandMapper;
     private final HotelPropertyMapper hotelPropertyMapper;
+    private final SysDictItemMapper sysDictItemMapper;
 
     @Override
     public Long create(PropertyCreateRequest request) {
         ResolvedOrg resolvedOrg = resolveGroupBrand(request.getGroupId(), request.getBrandId());
+        validateBusinessMode(request.getBusinessMode());
         if (hotelPropertyMapper.countByPropertyCode(request.getPropertyCode()) > 0) {
             throw new BusinessException("propertyCode already exists");
         }
@@ -56,11 +59,30 @@ public class PropertyServiceImpl implements PropertyService {
     @Override
     public List<PropertyVO> list() {
         List<PropertyVO> list = hotelPropertyMapper.findAll();
-        if (SecurityUtils.hasPermission("scope:all")) {
-            return list;
-        }
         List<Long> scopes = SecurityUtils.propertyScopes();
         return list.stream().filter(item -> scopes.contains(item.getId())).toList();
+    }
+
+    @Override
+    public List<PropertyVO> listScopeOptions() {
+        List<PropertyVO> list = hotelPropertyMapper.findAll();
+        UserPrincipal principal = SecurityUtils.currentPrincipal();
+        List<String> permissions = principal.getPermissions() == null ? List.of() : principal.getPermissions();
+        if (permissions.contains("scope:all")) {
+            return list.stream()
+                    .filter(item -> item.getStatus() != null && item.getStatus() == 1)
+                    .toList();
+        }
+        List<Long> scopes = principal.getPropertyScopes() == null ? List.of() : principal.getPropertyScopes();
+        if (scopes.isEmpty()) {
+            return list.stream()
+                    .filter(item -> item.getStatus() != null && item.getStatus() == 1)
+                    .toList();
+        }
+        return list.stream()
+                .filter(item -> item.getStatus() != null && item.getStatus() == 1)
+                .filter(item -> scopes.contains(item.getId()))
+                .toList();
     }
 
     @Override
@@ -69,6 +91,7 @@ public class PropertyServiceImpl implements PropertyService {
         if (existing == null) {
             throw new BusinessException("property not found");
         }
+        validateBusinessMode(request.getBusinessMode());
         ResolvedOrg resolvedOrg = (request.getGroupId() == null && request.getBrandId() == null)
                 ? new ResolvedOrg(existing.getGroupId(), existing.getBrandId())
                 : resolveGroupBrand(request.getGroupId(), request.getBrandId());
@@ -154,6 +177,12 @@ public class PropertyServiceImpl implements PropertyService {
             return principal.getUsername();
         }
         return "system";
+    }
+
+    private void validateBusinessMode(String businessMode) {
+        if (sysDictItemMapper.countEnabledByValue("BUSINESS_MODE", businessMode) <= 0) {
+            throw new BusinessException("unsupported business mode");
+        }
     }
 
     private static class ResolvedOrg {
