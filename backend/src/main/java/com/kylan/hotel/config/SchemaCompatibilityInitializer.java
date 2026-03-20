@@ -1,4 +1,4 @@
-﻿package com.kylan.hotel.config;
+package com.kylan.hotel.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

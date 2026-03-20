@@ -9,6 +9,8 @@ target/
 .settings/
 .project
 .classpath
+/apache-maven-*/
+/maven.zip
 
 # Node
 node_modules/
@@ -47,3 +49,6 @@ mock-server.log
 
 # TypeScript build cache
 *.tsbuildinfo
+
+# Local app config
+backend/src/main/resources/application-local.yml

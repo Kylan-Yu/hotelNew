@@ -13,15 +13,19 @@ This project is a full-stack demo for a homestay-first multi-property operations
 - CI Workflow: `.github/workflows/ci.yml`
 
 ## Quick Start | 快速启动
+Prerequisites | 前置环境: `Java 17`, `Maven 3.9+`, `Node 20+`, `MySQL 8`, `Redis 7`, `RabbitMQ 3.13` or Docker Desktop.
+
 ```bash
 # docker (optional)
 docker compose up --build
 
 # backend
+# import sql/schema.sql first and inject env vars from .env.example manually
 cd backend
 mvn spring-boot:run
 
 # frontend
+# put VITE_API_BASE_URL in frontend/.env.local for local dev
 cd frontend
 npm install
 npm run dev
@@ -32,7 +36,7 @@ Default account | 默认账号:
 - password: `Admin@123`
 
 ## Environment Variables | 环境变量
-- Template file | 模板文件: `.env.example`
+- Template file | 模板文件: `.env.example` (reference only, not auto-loaded by Maven/Vite)
 - Frontend API base URL: `VITE_API_BASE_URL=http://localhost:8080/api`
 
 ## Project Status | 当前状态
@@ -46,4 +50,3 @@ Default account | 默认账号:
 
 For full details, please open `README.en.md` or `README.zh-CN.md`.
 详细说明请查看 `README.en.md` 或 `README.zh-CN.md`。
-

@@ -1,4 +1,4 @@
-﻿package com.kylan.hotel.controller;
+package com.kylan.hotel.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;

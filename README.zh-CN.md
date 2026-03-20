@@ -14,6 +14,12 @@
 - 后端：Spring Boot 3 + MyBatis + MySQL + Redis + RabbitMQ + JWT + RBAC
 - 工程化：GitHub Actions CI、单元测试、SQL 注释中英双语
 
+## 运行前提
+- Java 17
+- Maven 3.9+（仓库未包含 Maven Wrapper，需要本机安装）
+- Node.js 20+ / npm 10+
+- MySQL 8、Redis 7、RabbitMQ 3.13；或直接使用 Docker Desktop + Docker Compose
+
 ## 信息架构（民宿场景）
 1. 工作台
 2. 房源管理
@@ -26,12 +32,14 @@
 9. 系统管理
 
 ## 快速启动
-### 1）准备环境变量
-参考根目录 `.env.example`：
-- 后端：数据库/Redis/RabbitMQ/JWT 等配置
-- 前端：`VITE_API_BASE_URL`
+### 1）准备配置与数据
+- 根目录 `.env.example` 是运行参数清单，不会被 `mvn spring-boot:run` 或 `npm run dev` 自动加载。
+- 本地启动后端前，请先创建 `hotel_management` 数据库，并执行 `sql/schema.sql` 初始化表结构与种子数据。
+- 本地启动后端时，请按 `.env.example` 在 shell 或 IDE 中注入环境变量。
+- 本地启动前端时，可在 `frontend/.env.local` 中配置 `VITE_API_BASE_URL=http://localhost:8080/api`。
+- 如果你习惯用 Spring Profile，本地可自行创建 `backend/src/main/resources/application-local.yml`，并通过 `--spring.profiles.active=local` 启动；该文件应保持未跟踪，不要提交到 git。
 
-### 2）Docker 一键启动（可选）
+### 2）Docker 一键启动（推荐首次体验）
 ```bash
 docker compose up --build
 ```
@@ -99,6 +107,7 @@ npm run build
 - 已移除运行配置中的明文基础设施地址与口令。
 - `backend/src/main/resources/application.yml` 改为环境变量读取。
 - 提供 `backend/src/main/resources/application.example.yml` 作为干净模板。
+- `backend/src/main/resources/application-local.yml` 仅建议作为个人本地配置文件使用，不应纳入版本控制。
 
 ## 文档入口
 - 功能清单：`docs/FEATURES.md`
@@ -112,5 +121,4 @@ npm run build
 
 ---
 面试演示建议：先讲架构和分层，再演示“民宿切换数据收敛、订单详情时间线、OTA 回调幂等与重试骨架”三条核心链路。
-
 

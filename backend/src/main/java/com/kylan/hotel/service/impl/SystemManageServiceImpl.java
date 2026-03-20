@@ -1,4 +1,4 @@
-﻿package com.kylan.hotel.service.impl;
+package com.kylan.hotel.service.impl;
 
 import com.kylan.hotel.common.BusinessException;
 import com.kylan.hotel.common.SecurityUtils;

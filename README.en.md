@@ -14,6 +14,12 @@ This repository is a full-stack demo project for a **homestay-first multi-proper
 - Backend: Spring Boot 3 + MyBatis + MySQL + Redis + RabbitMQ + JWT + RBAC
 - Infra/Engineering: GitHub Actions CI, unit tests, bilingual SQL comments
 
+## Prerequisites
+- Java 17
+- Maven 3.9+ (the repository does not include Maven Wrapper)
+- Node.js 20+ / npm 10+
+- MySQL 8, Redis 7, RabbitMQ 3.13; or Docker Desktop + Docker Compose
+
 ## Menu IA (Homestay-Oriented)
 1. Workbench
 2. Asset Management
@@ -26,12 +32,14 @@ This repository is a full-stack demo project for a **homestay-first multi-proper
 9. System
 
 ## Quick Start
-### 1) Prepare env
-Copy `.env.example` and adjust values:
-- backend runtime vars: DB/Redis/RabbitMQ/JWT
-- frontend runtime var: `VITE_API_BASE_URL`
+### 1) Prepare config and data
+- The root `.env.example` is a variable checklist. It is not auto-loaded by `mvn spring-boot:run` or `npm run dev`.
+- Before running the backend locally, create the `hotel_management` database and execute `sql/schema.sql`.
+- For local backend runs, inject runtime variables from `.env.example` in your shell or IDE.
+- For local frontend runs, put `VITE_API_BASE_URL=http://localhost:8080/api` in `frontend/.env.local`.
+- If you prefer Spring profiles, create your own `backend/src/main/resources/application-local.yml` and start with `--spring.profiles.active=local`; keep that file local and out of git.
 
-### 2) One-command startup with Docker (optional)
+### 2) One-command startup with Docker (recommended for first run)
 ```bash
 docker compose up --build
 ```
@@ -99,6 +107,7 @@ npm run build
 - No hardcoded infrastructure credentials in source-controlled runtime config.
 - `backend/src/main/resources/application.yml` now reads from environment variables.
 - `backend/src/main/resources/application.example.yml` is provided as a clean template.
+- `backend/src/main/resources/application-local.yml` should remain a personal local-only file and must not be committed.
 
 ## Docs
 - Feature overview: `docs/FEATURES.md`
@@ -112,5 +121,4 @@ npm run build
 
 ---
 If this project is used in interviews, start with the architecture and core modules, then demo order detail timeline, property isolation, and OTA callback idempotency/retry skeleton.
-
 
