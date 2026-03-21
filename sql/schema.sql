@@ -1,4 +1,4 @@
-﻿-- Hotel/Homestay Management System Initialization Script
+-- Hotel/Homestay Management System Initialization Script
 -- 酒店/民宿管理系统初始化脚本
 -- Compatible with MySQL 5.7+/8.x (avoid ALTER ... ADD COLUMN IF NOT EXISTS syntax)
 -- 兼容 MySQL 5.7+/8.x（避免使用 ALTER ... ADD COLUMN IF NOT EXISTS 语法）
@@ -6,9 +6,11 @@
 CREATE DATABASE IF NOT EXISTS hotel_management
   DEFAULT CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
+
 USE hotel_management;
 
 SET NAMES utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 0;
 
 CREATE TABLE IF NOT EXISTS sys_user (
@@ -163,11 +165,11 @@ CREATE TABLE IF NOT EXISTS hotel_brand (
 
 CREATE TABLE IF NOT EXISTS hotel_property (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '门店ID / Property ID',
-  group_id BIGINT DEFAULT NULL COMMENT '集团ID(可空) / Group ID (Nullable)',
-  brand_id BIGINT DEFAULT NULL COMMENT '品牌ID(可空) / Brand ID (Nullable)',
+  group_id BIGINT NULL COMMENT '集团ID(可空) / Group ID (Nullable)',
+  brand_id BIGINT NULL COMMENT '品牌ID(可空) / Brand ID (Nullable)',
   property_code VARCHAR(64) NOT NULL COMMENT '门店编码 / Property Code',
   property_name VARCHAR(128) NOT NULL COMMENT '门店名称 / Property Name',
-  business_mode VARCHAR(32) NOT NULL COMMENT '经营模式(HOTEL/HOMESTAY) / Business Mode (HOTEL/HOMESTAY)',
+  business_mode VARCHAR(32) NOT NULL DEFAULT 'HOMESTAY' COMMENT '经营模式 / Business Mode',
   contact_phone VARCHAR(32) DEFAULT NULL COMMENT '联系电话 / Contact Phone',
   province VARCHAR(64) DEFAULT NULL COMMENT '省份 / Province',
   city VARCHAR(64) DEFAULT NULL COMMENT '城市 / City',
@@ -180,16 +182,10 @@ CREATE TABLE IF NOT EXISTS hotel_property (
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间 / Updated At',
   deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除 / Logical Deleted',
   UNIQUE KEY uk_hotel_property_code (property_code),
-  KEY idx_hotel_property_group_id (group_id),
-  KEY idx_hotel_property_brand_id (brand_id),
+  KEY idx_hotel_property_group (group_id),
+  KEY idx_hotel_property_brand (brand_id),
   KEY idx_hotel_property_mode (business_mode)
 ) COMMENT='门店表 / Property Table';
-
--- Backward compatibility: allow standalone homestay records without group/brand
--- 向后兼容：允许民宿独立建档，不强制集团与品牌
-ALTER TABLE hotel_property
-  MODIFY COLUMN group_id BIGINT NULL COMMENT '集团ID(可空) / Group ID (Nullable)',
-  MODIFY COLUMN brand_id BIGINT NULL COMMENT '品牌ID(可空) / Brand ID (Nullable)';
 
 CREATE TABLE IF NOT EXISTS hotel_room_type (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '房型ID / Room Type ID',
@@ -852,18 +848,130 @@ INSERT INTO sys_user_property_scope (user_id, property_id, created_by, updated_b
 VALUES (1, 1, 'system', 'system', 0)
 ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
 
+-- =========================
+-- Demo Data for All System Modules / 各系统模块演示数据
+-- =========================
+
+-- Additional Users / 额外用户
+INSERT INTO sys_user (id, username, password_hash, nickname, mobile, email, status, created_by, updated_by, deleted)
+VALUES 
+(2, 'manager', '$2b$12$Shy81wwJpP1bv22tA6r2Ruxketd61fSbggJjfkzix1ssC946nQmPq', '民宿经理', '13900000002', 'manager@hotel.com', 1, 'system', 'system', 0),
+(3, 'receptionist', '$2b$12$Shy81wwJpP1bv22tA6r2Ruxketd61fSbggJjfkzix1ssC946nQmPq', '前台接待', '13900000003', 'receptionist@hotel.com', 1, 'system', 'system', 0),
+(4, 'housekeeper', '$2b$12$Shy81wwJpP1bv22tA6r2Ruxketd61fSbggJjfkzix1ssC946nQmPq', '保洁员', '13900000004', 'housekeeper@hotel.com', 1, 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+-- Additional Roles / 额外角色
+INSERT INTO sys_role (id, role_code, role_name, status, created_by, updated_by, deleted)
+VALUES 
+(2, 'MANAGER', '民宿经理', 1, 'system', 'system', 0),
+(3, 'RECEPTIONIST', '前台接待', 1, 'system', 'system', 0),
+(4, 'HOUSEKEEPER', '保洁员', 1, 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+-- User Role Assignments / 用户角色分配
+INSERT INTO sys_user_role (user_id, role_id, created_by, updated_by, deleted)
+VALUES 
+(2, 2, 'system', 'system', 0),
+(3, 3, 'system', 'system', 0),
+(4, 4, 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+-- Additional Groups & Brands & Properties / 额外集团、品牌、民宿
+INSERT INTO hotel_group (id, group_code, group_name, status, created_by, updated_by, deleted)
+VALUES 
+(2, 'G002', '连锁民宿集团', 1, 'system', 'system', 0),
+(3, 'G003', '精品酒店集团', 1, 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+INSERT INTO hotel_brand (id, group_id, brand_code, brand_name, status, created_by, updated_by, deleted)
+VALUES 
+(2, 2, 'B002', '温馨民宿', 1, 'system', 'system', 0),
+(3, 3, 'B003', '豪华酒店', 1, 'system', 'system', 0),
+(4, 2, 'B004', '独立品牌', 1, 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+INSERT INTO hotel_property (id, group_id, brand_id, property_code, property_name, business_mode, contact_phone, province, city, district, address, status, created_by, updated_by, deleted)
+VALUES 
+(2, 2, 2, 'P002', '海景民宿', 'HOMESTAY', '0755-88888888', '广东省', '深圳市', '南山区', '海滨路88号', 1, 'system', 'system', 0),
+(3, 3, 3, 'P003', '商务酒店', 'HOTEL', '010-66666666', '北京市', '北京市', '朝阳区', '建国门外大街1号', 1, 'system', 'system', 0),
+(4, 2, 4, 'P004', '山景客栈', 'HOMESTAY', '0571-99999999', '浙江省', '杭州市', '西湖区', '西湖景区100号', 1, 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+-- Additional Room Types / 额外房型
+INSERT INTO hotel_room_type (id, property_id, room_type_code, room_type_name, max_guest_count, bed_type, base_price, status, created_by, updated_by, deleted)
+VALUES 
+(2, 1, 'RT002', '豪华双床房', 2, 'Twin', 428.00, 1, 'system', 'system', 0),
+(3, 1, 'RT003', '家庭套房', 4, 'King+Twin', 688.00, 1, 'system', 'system', 0),
+(4, 2, 'RT004', '海景大床房', 2, 'King', 588.00, 1, 'system', 'system', 0),
+(5, 3, 'RT005', '商务单间', 1, 'Single', 298.00, 1, 'system', 'system', 0),
+(6, 4, 'RT006', '山景标间', 2, 'Twin', 368.00, 1, 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+-- Additional Rooms / 额外房间
+INSERT INTO hotel_room (id, property_id, room_type_id, room_no, floor_no, status, created_by, updated_by, deleted)
+VALUES 
+(3, 1, 2, '1803', '18', 'VACANT_DIRTY', 'system', 'system', 0),
+(4, 1, 3, '1804', '18', 'MAINTENANCE', 'system', 'system', 0),
+(5, 1, 1, '1701', '17', 'VACANT_CLEAN', 'system', 'system', 0),
+(6, 1, 2, '1702', '17', 'OCCUPIED', 'system', 'system', 0),
+(7, 2, 4, '2001', '20', 'VACANT_CLEAN', 'system', 'system', 0),
+(8, 2, 4, '2002', '20', 'OCCUPIED', 'system', 'system', 0),
+(9, 3, 5, '1001', '10', 'VACANT_CLEAN', 'system', 'system', 0),
+(10, 3, 5, '1002', '10', 'LOCKED', 'system', 'system', 0),
+(11, 4, 6, '3001', '3', 'VACANT_CLEAN', 'system', 'system', 0),
+(12, 4, 6, '3002', '3', 'VACANT_DIRTY', 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+-- Room Status Logs / 房态日志
+INSERT INTO hotel_room_status_log (room_id, old_status, new_status, reason, operator)
+VALUES 
+(3, 'VACANT_CLEAN', 'VACANT_DIRTY', '客人退房后待清扫', 'system'),
+(4, 'VACANT_CLEAN', 'MAINTENANCE', '空调维修', 'system'),
+(6, 'VACANT_CLEAN', 'OCCUPIED', '客人入住', 'system'),
+(8, 'VACANT_CLEAN', 'OCCUPIED', '客人入住', 'system'),
+(10, 'VACANT_CLEAN', 'LOCKED', '预留房间', 'system');
+
+-- Reservations / 预订记录
 INSERT INTO hotel_reservation (reservation_no, property_id, room_type_id, channel_code, contact_name, contact_mobile, guest_count, check_in_date, check_out_date, reservation_status, estimated_amount, remark, created_by, updated_by, deleted)
-VALUES ('RSV_INIT_001', 1, 1, 'DIRECT', '测试住客', '13900000001', 2, CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), 'CONFIRMED', 388.00, '初始化预订', 'system', 'system', 0)
+VALUES 
+('RSV202403001', 1, 1, 'DIRECT', '张三', '13900000011', 2, CURRENT_DATE + INTERVAL 2 DAY, CURRENT_DATE + INTERVAL 3 DAY, 'CONFIRMED', 388.00, '电话预订', 'system', 'system', 0),
+('RSV202403002', 2, 4, 'OTA', '李四', '13900000012', 2, CURRENT_DATE + INTERVAL 3 DAY, CURRENT_DATE + INTERVAL 5 DAY, 'CONFIRMED', 1176.00, '携程预订', 'system', 'system', 0),
+('RSV202403003', 3, 5, 'DIRECT', '王五', '13900000013', 1, CURRENT_DATE + INTERVAL 1 DAY, CURRENT_DATE + INTERVAL 2 DAY, 'PENDING', 298.00, '待确认预订', 'system', 'system', 0),
+('RSV202403004', 4, 6, 'WECHAT', '赵六', '13900000014', 2, CURRENT_DATE + INTERVAL 4 DAY, CURRENT_DATE + INTERVAL 6 DAY, 'CONFIRMED', 736.00, '微信预订', 'system', 'system', 0)
 ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
 
+-- Orders / 订单记录
 INSERT INTO hotel_order (order_no, property_id, room_type_id, source_channel, guest_name, guest_mobile, check_in_date, check_out_date, total_amount, order_status, channel_order_no, created_by, updated_by, deleted)
-VALUES ('ORD_INIT_001', 1, 1, 'DIRECT', '测试住客', '13900000001', CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), 388.00, 'CONFIRMED', NULL, 'system', 'system', 0)
+VALUES 
+('ORD202403001', 1, 1, 'DIRECT', '张三', '13900000011', CURRENT_DATE + INTERVAL 2 DAY, CURRENT_DATE + INTERVAL 3 DAY, 388.00, 'CONFIRMED', NULL, 'system', 'system', 0),
+('ORD202403002', 2, 4, 'OTA', '李四', '13900000012', CURRENT_DATE + INTERVAL 3 DAY, CURRENT_DATE + INTERVAL 5 DAY, 1176.00, 'PAID', 'CT202403002', 'system', 'system', 0),
+('ORD202403003', 1, 2, 'DIRECT', '钱七', '13900000015', CURRENT_DATE, CURRENT_DATE + INTERVAL 2 DAY, 856.00, 'CHECKED_IN', NULL, 'system', 'system', 0)
 ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
 
--- =========================
--- Enhancement: Log dimensions + OTA callback log + permissions
--- 增强：日志维度字段 + OTA回调日志 + 权限点
--- =========================
+-- Members / 会员信息
+INSERT INTO member_profile (id, property_id, member_no, member_name, mobile, gender, level_code, point_balance, status, created_by, updated_by, deleted)
+VALUES 
+(1, 1, 'M000001', '张三', '13900000011', 'MALE', 3, 800, 'ACTIVE', 'system', 'system', 0),
+(2, 1, 'M000002', '李四', '13900000012', 'FEMALE', 2, 380, 'ACTIVE', 'system', 'system', 0),
+(3, 1, 'M000003', '王五', '13900000013', 'MALE', 1, 180, 'ACTIVE', 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+-- Pricing Rules / 价格规则 (使用实际的价格规则表结构)
+INSERT INTO hotel_price_rule (id, property_id, rule_name, rule_type, rule_value, delta_amount, enabled, created_by, updated_by, deleted)
+VALUES 
+(1, 1, '标准房价', 'BASE_PRICE', 'STANDARD', 0.00, 1, 'system', 'system', 0),
+(2, 2, '海景房价', 'BASE_PRICE', 'OCEAN_VIEW', 200.00, 1, 'system', 'system', 0),
+(3, 3, '商务房价', 'BASE_PRICE', 'BUSINESS', -90.00, 1, 'system', 'system', 0),
+(4, 4, '山景房价', 'BASE_PRICE', 'MOUNTAIN_VIEW', -20.00, 1, 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+-- Channel Config / 渠道配置
+INSERT INTO channel_account (id, property_id, channel_code, app_key, app_secret, auth_status, created_by, updated_by, deleted)
+VALUES 
+(1, 1, 'CTrip', 'ctrip_key_001', 'ctrip_secret_001', 1, 'system', 'system', 0),
+(2, 2, 'Fliggy', 'fliggy_key_001', 'fliggy_secret_001', 1, 'system', 'system', 0),
+(3, 1, 'Booking', 'booking_key_001', 'booking_secret_001', 0, 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
 
 CREATE TABLE IF NOT EXISTS channel_callback_log (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '回调日志ID / Callback Log ID',
@@ -881,6 +989,66 @@ CREATE TABLE IF NOT EXISTS channel_callback_log (
   KEY idx_channel_callback_log_code_time (channel_code, created_at),
   KEY idx_channel_callback_log_event (channel_code, event_type, external_request_no)
 ) COMMENT='渠道回调日志表 / Channel Callback Log Table';
+
+-- Channel Callback Logs / 渠道回调日志
+INSERT INTO channel_callback_log (idempotent_key, channel_code, event_type, external_request_no, signature, callback_status, payload, message, processed_flag)
+VALUES 
+('callback_001', 'CTrip', 'RESERVATION_CONFIRM', 'CT202403001', 'sig_abc123', 'SUCCESS', '{"reservationNo":"RSV202403001","status":"confirmed"}', '预订确认成功', 'Y'),
+('callback_002', 'Fliggy', 'RESERVATION_CANCEL', 'FG202403002', 'sig_def456', 'FAILED', '{"reservationNo":"RSV202403002","status":"cancelled"}', '预订取消失败', 'N'),
+('callback_003', 'CTrip', 'RATE_UPDATE', 'CT202403003', 'sig_ghi789', 'SUCCESS', '{"roomType":"RT001","rate":388.00}', '房价更新成功', 'Y')
+ON DUPLICATE KEY UPDATE
+  channel_code = VALUES(channel_code),
+  event_type = VALUES(event_type),
+  external_request_no = VALUES(external_request_no),
+  signature = VALUES(signature),
+  callback_status = VALUES(callback_status),
+  payload = VALUES(payload),
+  message = VALUES(message),
+  processed_flag = VALUES(processed_flag);
+
+-- Operation Logs / 操作日志
+INSERT INTO operation_log_record (module_code, operation, operator, success_flag, message, property_id, created_at)
+VALUES 
+('RESERVATION', '创建预订记录: RSV202403001', 'admin', 'Y', '预订创建成功', 1, NOW()),
+('ORDER', '更新订单状态: ORD202403002', 'manager', 'Y', '订单状态更新为已付款', 2, NOW()),
+('MEMBER', '删除会员记录: M000001', 'system', 'Y', '会员记录删除成功', 1, NOW());
+
+-- Finance Records / 财务记录 (使用实际的支付记录表结构)
+INSERT INTO hotel_payment_record (id, order_id, payment_type, payment_method, amount, payment_status, created_by, updated_by, deleted)
+VALUES 
+(1, 1, 'PAYMENT', 'CASH', 388.00, 'PAID', 'system', 'system', 0),
+(2, 2, 'PAYMENT', 'ONLINE', 1176.00, 'PAID', 'system', 'system', 0),
+(3, 3, 'PAYMENT', 'WECHAT', 856.00, 'PAID', 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+INSERT INTO finance_refund_record (id, payment_id, order_id, refund_amount, refund_reason, refund_status, created_by, updated_by, deleted)
+VALUES 
+(1, 2, 2, 588.00, '客人申请退款', 'PROCESSING', 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+-- Additional Dictionary Items / 额外字典项
+INSERT INTO sys_dict_item (dict_code, item_code, item_name, item_value, status, sort_no, remark, created_by, updated_by, deleted)
+VALUES 
+('BUSINESS_MODE', 'GUESTHOUSE', '客栈 / Guesthouse', 'GUESTHOUSE', 1, 30, '客栈经营模式 / guesthouse mode', 'system', 'system', 0),
+('GENDER', 'OTHER', '其他 / Other', 'OTHER', 1, 40, '其他性别 / other gender', 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+-- Additional System Parameters / 额外系统参数
+INSERT INTO sys_param (param_key, param_value, remark, created_by, updated_by, deleted)
+VALUES 
+('hms.checkin.autoCheckoutTime', '12:00', '自动退房时间 / auto checkout time', 'system', 'system', 0),
+('hms.pricing.weekendRate', '1.2', '周末房价倍率 / weekend rate multiplier', 'system', 'system', 0),
+('hms.notification.sms.enabled', 'true', '短信通知开关 / SMS notification switch', 'system', 'system', 0),
+('hms.member.points.rate', '0.1', '积分获取比例 / points earning rate', 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+INSERT INTO hotel_reservation (reservation_no, property_id, room_type_id, channel_code, contact_name, contact_mobile, guest_count, check_in_date, check_out_date, reservation_status, estimated_amount, remark, created_by, updated_by, deleted)
+VALUES ('RSV_INIT_001', 1, 1, 'DIRECT', '测试住客', '13900000001', 2, CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), 'CONFIRMED', 388.00, '初始化预订', 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+INSERT INTO hotel_order (order_no, property_id, room_type_id, source_channel, guest_name, guest_mobile, check_in_date, check_out_date, total_amount, order_status, channel_order_no, created_by, updated_by, deleted)
+VALUES ('ORD_INIT_001', 1, 1, 'DIRECT', '测试住客', '13900000001', CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), 388.00, 'CONFIRMED', NULL, 'system', 'system', 0)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
 
 -- NOTE:
 -- order:export and log center permissions are already seeded in menu ids 2213 and 2704.

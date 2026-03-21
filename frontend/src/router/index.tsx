@@ -78,12 +78,12 @@ export function AppRouter() {
           <Route path="/operations/room-status-record" element={<RoomStatusPage />} />
           <Route path="/operations/log-center" element={<LogPage />} />
 
-          <Route path="/system/users" element={<SystemDataPage type="users" title="用户管理" />} />
-          <Route path="/system/roles" element={<SystemDataPage type="roles" title="角色管理" />} />
-          <Route path="/system/permissions" element={<SystemDataPage type="permissions" title="权限管理" />} />
-          <Route path="/system/menus" element={<SystemDataPage type="menus" title="菜单管理" />} />
-          <Route path="/system/dicts" element={<SystemDataPage type="dicts" title="字典管理" />} />
-          <Route path="/system/params" element={<SystemDataPage type="params" title="参数配置" />} />
+          <Route path="/system/users" element={<SystemDataPage key="users" type="users" title="用户管理" />} />
+          <Route path="/system/roles" element={<SystemDataPage key="roles" type="roles" title="角色管理" />} />
+          <Route path="/system/permissions" element={<SystemDataPage key="permissions" type="permissions" title="权限管理" />} />
+          <Route path="/system/menus" element={<SystemDataPage key="menus" type="menus" title="菜单管理" />} />
+          <Route path="/system/dicts" element={<SystemDataPage key="dicts" type="dicts" title="字典管理" />} />
+          <Route path="/system/params" element={<SystemDataPage key="params" type="params" title="参数配置" />} />
 
           <Route path="/dashboard" element={<Navigate to="/workbench/dashboard" replace />} />
           <Route path="/groups" element={<Navigate to="/assets/homestays" replace />} />

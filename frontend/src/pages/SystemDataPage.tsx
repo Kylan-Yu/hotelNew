@@ -90,6 +90,10 @@ export function SystemDataPage({ type, title }: SystemDataPageProps) {
   }
 
   useEffect(() => {
+    setData([])
+    setKeyword('')
+    setDictItems([])
+    setSelectedDictCode(undefined)
     load()
   }, [type])
 
