@@ -1,8 +1,0 @@
-{
-  "name": "hotel-management-system",
-  "private": true,
-  "description": "Workspace metadata. Start backend and frontend in their own directories.",
-  "scripts": {
-    "start": "echo \"No mock server. Start backend and frontend separately.\""
-  }
-}
